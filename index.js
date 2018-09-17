@@ -155,7 +155,7 @@ const createUsagePlan = async function createUsagePlan(name, creds, region, cli)
     credentials: creds,
     region
   });
-  //cli.consoleLog(`AddApiKey: ${chalk.yellow(`Creating new usage plan ${name}`)}`);
+  cli.consoleLog(`AddApiKey: ${chalk.yellow(`Creating new usage plan ${name}`)}`);
   try {
     const resp = await apigateway.createUsagePlan({ name }).promise();
     return resp.id;
@@ -178,7 +178,7 @@ const createUsagePlanKey = async function createUsagePlanKey(apiKeyId, usagePlan
     credentials: creds,
     region
   });
-  //cli.consoleLog(`AddApiKey: ${chalk.yellow(`Associating api key ${apiKeyId} with usage plan ${usagePlanId}`)}`);
+  cli.consoleLog(`AddApiKey: ${chalk.yellow(`Associating api key ${apiKeyId} with usage plan ${usagePlanId}`)}`);
   try {
     const params = {
       keyId: apiKeyId,

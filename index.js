@@ -131,7 +131,7 @@ const createKey  = async function createKey(key, creds, region, cli) {
     credentials: creds,
     region
   });
-  //cli.consoleLog(`AddApiKey: ${chalk.yellow(`Creating new api key ${key}`)}`);
+  cli.consoleLog(`AddApiKey: ${chalk.yellow(`Creating new api key ${key}`)}`);
   try {
     const resp = await apigateway.createApiKey({ name: key, enabled: true }).promise();
     cli.consoleLog(`AddApiKey: ${chalk.yellow(`Created new api key ${key}:${resp.id}`)}`);

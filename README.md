@@ -19,7 +19,7 @@ plugins:
 ## Configuration
 ```yaml
 custom:
-  apikey: [<api key name>]
+  apikeys: [<api key name>]
 ```
 Code automatically creates a usage plan called `<api-key-name>-usage-plan`.
 

@@ -23,3 +23,15 @@ custom:
 ```
 Code automatically creates a usage plan called `<api-key-name>-usage-plan`.
 
+### Specifying key values
+
+```yaml
+custom:
+  apiKeys:
+    - name: SomeKey
+      value: your-api-key-that-is-at-least-20-characters-long
+    - name: KeyFromSlsVariables
+      value: ${env:MyKey}
+    - SomeOtherKeyThatAssignsRandomValue
+```
+

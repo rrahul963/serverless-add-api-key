@@ -121,19 +121,23 @@ const getUsagePlanKeys = async function getUsagePlanKeys(usagePlanId, creds, reg
 /**
  * Create new api key.
  * @param {string} key Api key name.
+ * @param {string} keyValue Api key value.
  * @param {Object} creds AWS credentials.
  * @param {string} region AWS region.
  * @param {Object} cli Serverless CLI object
  * @returns {string} Api key id.
  */
-const createKey  = async function createKey(key, creds, region, cli) {
+const createKey  = async function createKey(key, keyValue, creds, region, cli) {
   const apigateway = new AWS.APIGateway({
     credentials: creds,
     region
   });
   cli.consoleLog(`AddApiKey: ${chalk.yellow(`Creating new api key ${key}`)}`);
   try {
-    const resp = await apigateway.createApiKey({ name: key, enabled: true }).promise();
+    const params = { name: key, enabled: true };
+    if(keyValue) params.value = keyValue;
+
+    const resp = await apigateway.createApiKey(params).promise();
     cli.consoleLog(`AddApiKey: ${chalk.yellow(`Created new api key ${key}:${resp.id}`)}`);
     return resp.id;
   } catch (error) {
@@ -243,14 +247,19 @@ const associateRestApiWithUsagePlan = async function associateRestApiWithUsagePl
  * @param {Object} serverless Serverless object
  */
 const addApiKey = async function addApiKey(serverless) {
-  
+
   const awsCredentials = serverless.getProvider('aws').getCredentials();
   const region = serverless.getProvider('aws').getRegion();
   const apiKeyNames = serverless.service.custom.apiKeys || [];
   const planName = `${apiKeyName}-usage-plan`;
   const serviceName = serverless.service.getServiceName();
 
-  for (var apiKeyName of apiKeyNames) { 
+  for (var apiKeyName of apiKeyNames) {
+      let apiKeyValue = null;
+      if(apiKeyName.value){
+        apiKeyValue = apiKeyName.value;
+        apiKeyName = apiKeyName.name;
+      }
 
       try {
 
@@ -263,7 +272,7 @@ const addApiKey = async function addApiKey(serverless) {
 
         // if api key doesn't exist, create one.
         if (!apiKey) {
-          apiKeyId = await createKey(apiKeyName, awsCredentials.credentials, region, serverless.cli);
+          apiKeyId = await createKey(apiKeyName, apiKeyValue, awsCredentials.credentials, region, serverless.cli);
         } else {
           serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Api key ${apiKeyName} already exists, skipping creation.`)}`);
           apiKeyId = apiKey.id;

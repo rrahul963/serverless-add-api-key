@@ -302,6 +302,96 @@ const addApiKey = async function addApiKey(serverless) {
 };
 
 /**
+ * Delete api key.
+ * @param {string} key Api key name.
+ * @param {string} apiKeyId Api Key id.
+ * @param {string} keyValue Api key value.
+ * @param {Object} creds AWS credentials.
+ * @param {string} region AWS region.
+ * @param {Object} cli Serverless CLI object
+ * @returns {string} Api key id.
+ */
+const deleteApiKey  = async function deleteApiKey(key, apiKeyId, creds, region, cli) {
+  const apigateway = new AWS.APIGateway({
+    credentials: creds,
+    region
+  });
+  cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Removing api key ${key}`)}`);
+  try {
+    const params = { apiKey: apiKeyId };
+    const resp = await apigateway.deleteApiKey(params).promise();
+    cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Successfully removed api key ${key}`)}`);
+    return resp.id;
+  } catch (error) {
+    cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Failed to remove api key. Error ${error.message || error}`)}`);
+    throw error;
+  }
+};
+
+/**
+ * Deletes usage plan.
+ * @param {string} name Usage plan name.
+ * @param {string} usagePlanId Usage plan id.
+ * @param {Object} creds AWS credentials.
+ * @param {string} region AWS region.
+ * @param {Object} cli Serverless CLI object.
+ * @returns {string} Usage plan id.
+ */
+const deleteUsagePlan = async function deleteUsagePlan(name, usagePlanId, creds, region, cli) {
+  const apigateway = new AWS.APIGateway({
+    credentials: creds,
+    region
+  });
+  cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Deleting usage plan ${name}`)}`);
+  try {
+    const resp = await apigateway.deleteUsagePlan({ usagePlanId }).promise();
+    return resp.id;
+  } catch (error) {
+    cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Failed to delete usage plan. Error ${error.message || error}`)}`);
+    throw error;
+  }
+};
+
+/**
+ * Main function that removes api key.
+ * @param {Object} serverless Serverless object
+ */
+const removeApiKey = async function removeApiKey(serverless) {
+
+  const awsCredentials = serverless.getProvider('aws').getCredentials();
+  const region = serverless.getProvider('aws').getRegion();
+  const apiKeyNames = serverless.service.custom.apiKeys || [];
+
+  for (var apiKeyName of apiKeyNames) {
+      if(apiKeyName.value){
+        apiKeyValue = apiKeyName.value;
+        apiKeyName = apiKeyName.name;
+      }
+
+      try {
+        const planName = `${apiKeyName}-usage-plan`;
+        const apiKey = await getApiKey(apiKeyName, awsCredentials.credentials, region, serverless.cli);
+        let usagePlan = await getUsagePlan(planName, awsCredentials.credentials, region, serverless.cli);
+
+        if (apiKey) {
+          await deleteApiKey(apiKeyName, apiKey.id, awsCredentials.credentials, region, serverless.cli);
+        } else {
+          serverless.cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Api key ${apiKeyName} already removed, skipping deletion.`)}`);
+        }
+
+        if (usagePlan) {
+          await deleteUsagePlan(planName, usagePlan.id, awsCredentials.credentials, region, serverless.cli);
+        } else {
+          serverless.cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Usage plan: ${planName} already removed, skipping deletion.`)}`);
+        }
+        
+      } catch (error) {
+        serverless.cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Failed to remove api key the service. Error ${error.message || error}`)}`);
+      }
+   }
+};
+
+/**
  * The class that will be used as serverless plugin.
  */
 class AddApiKey {
@@ -310,6 +400,9 @@ class AddApiKey {
     this.hooks = {
       'after:deploy:deploy': function () {
         addApiKey(serverless);
+      },
+      'after:remove:remove': function () {
+        removeApiKey(serverless);
       }
     };
   }

@@ -308,8 +308,8 @@ class AddApiKey {
   constructor(serverless, options) {
     this.options = options;
     this.hooks = {
-      'after:deploy:deploy': function () {
-        addApiKey(serverless);
+      'after:deploy:deploy': async function () {
+        await addApiKey(serverless);
       }
     };
   }

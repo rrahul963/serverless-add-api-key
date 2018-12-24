@@ -247,9 +247,10 @@ const associateRestApiWithUsagePlan = async function associateRestApiWithUsagePl
  * @param {Object} serverless Serverless object
  */
 const addApiKey = async function addApiKey(serverless) {
-
-  const awsCredentials = serverless.getProvider('aws').getCredentials();
-  const region = serverless.getProvider('aws').getRegion();
+  const provider = serverless.getProvider('aws');
+  const awsCredentials = provider.getCredentials();
+  const region = provider.getRegion();
+  const stage = provider.getStage();
   const apiKeyNames = serverless.service.custom.apiKeys || [];
   const planName = `${apiKeyName}-usage-plan`;
   const serviceName = serverless.service.getServiceName();
@@ -294,7 +295,7 @@ const addApiKey = async function addApiKey(serverless) {
             serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Usage plan ${planName} already has api key associated with it, skipping association.`)}`);
           }
         }
-        await associateRestApiWithUsagePlan(serviceName, usagePlan, serverless.service.provider.stage, awsCredentials.credentials, region, serverless.cli);
+        await associateRestApiWithUsagePlan(serviceName, usagePlan, stage, awsCredentials.credentials, region, serverless.cli);
       } catch (error) {
         serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Failed to add api key the service. Error ${error.message || error}`)}`);
       }

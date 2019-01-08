@@ -251,15 +251,14 @@ const addApiKey = async function addApiKey(serverless) {
   const awsCredentials = provider.getCredentials();
   const region = provider.getRegion();
   const stage = provider.getStage();
-  const apiKeyNames = serverless.service.custom.apiKeys || [];
-  const planName = `${apiKeyName}-usage-plan`;
+  const apiKeys = serverless.service.custom.apiKeys || [];
   const serviceName = serverless.service.getServiceName();
 
-  for (var apiKeyName of apiKeyNames) {
+  for (let apiKey of apiKeys) {
       let apiKeyValue = null;
+      const apiKeyName = apiKey.name;
       if(apiKeyName.value){
-        apiKeyValue = apiKeyName.value;
-        apiKeyName = apiKeyName.name;
+        apiKeyValue = apiKey.value;
       }
 
       try {

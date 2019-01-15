@@ -257,7 +257,7 @@ const addApiKey = async function addApiKey(serverless) {
   for (let apiKey of apiKeys) {
       let apiKeyValue = null;
       const apiKeyName = apiKey.name;
-      if(apiKeyName.value){
+      if(apiKey.value){
         apiKeyValue = apiKey.value;
       }
 

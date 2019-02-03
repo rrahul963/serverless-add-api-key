@@ -19,7 +19,9 @@ plugins:
 ## Configuration
 ```yaml
 custom:
-  apiKeys: [<api key name>]
+  apiKeys:
+    - name: name1
+    - name: name2
 ```
 Code automatically creates a usage plan called `<api-key-name>-usage-plan`.
 
@@ -31,7 +33,7 @@ custom:
     - name: SomeKey
       value: your-api-key-that-is-at-least-20-characters-long
     - name: KeyFromSlsVariables
-      value: ${env:MyKey}
+      value: ${opt:MyKey}
     - SomeOtherKeyThatAssignsRandomValue
 ```
 

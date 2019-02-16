@@ -37,3 +37,17 @@ custom:
     - SomeOtherKeyThatAssignsRandomValue
 ```
 
+### Specifying encrypted key values
+
+```yaml
+custom:
+  apiKeys:
+    - name: SomeKey
+      value: your-api-key-that-is-at-least-20-characters-long
+    - name: KeyFromSlsVariables
+      value: ${opt:MyKey}
+    - SomeOtherKeyThatAssignsRandomValue
+    - name: KMSEncryptedKey
+    - value:
+      encrypted: A-KMS-Encrypted-Value
+```

@@ -245,19 +245,21 @@ const associateRestApiWithUsagePlan = async function associateRestApiWithUsagePl
 /**
  * 
  * @param {string} encryptedApiKeyValue Encrypted value for the API key
- * @param {string} region AWS region.
+ * @param {string} kmsKeyRegion AWS region where KMS key is in.
  * @param {Object} cli Serverless CLI object
  */
-const decryptApiKeyValue = async function decryptApiKeyValue(encryptedApiKeyValue, region, cli) {
-  const kms = new AWS.KMS({ apiVersion: '2014-11-01', region });
+const decryptApiKeyValue = async function decryptApiKeyValue(encryptedApiKeyValue, kmsKeyRegion, cli) {
+  const kms = new AWS.KMS({ apiVersion: '2014-11-01', region: kmsKeyRegion });
   try {
     const decryptedApiKeyValue = await kms
       .decrypt({ CiphertextBlob: new Buffer(encryptedApiKeyValue, 'base64') })
       .promise()
       .then(data => data.Plaintext.toString('ascii'));
+
+      cli.consoleLog(`AddApiKey: ${chalk.yellow(`Successfully decrypted value of "{${encryptedApiKeyValue.substring(0, 10)}..." using KMS key in ${kmsKeyRegion}`)}`);
       return decryptedApiKeyValue;
   } catch (error) {
-    cli.consoleLog(`AddApiKey: ${chalk.yellow(`Value ${encryptedApiKeyValue.substring(0, 10)}... can not be decrypted properly with keys in KMS in region ${region}`)}. The value for the key will be generated.`);
+    cli.consoleLog(`AddApiKey: ${chalk.yellow(`Value "${encryptedApiKeyValue.substring(0, 10)}..." can not be decrypted properly with keys in KMS in region ${kmsKeyRegion}`)}. The value for the key will be generated.`);
     return null;        
   }
 }
@@ -281,7 +283,9 @@ const addApiKey = async function addApiKey(serverless) {
         apiKeyValue = apiKey.value;
         // if KMS encrypted value configured, encrypt it using KMS
         if(typeof apiKeyValue === 'object' && apiKeyValue.encrypted) {
-          apiKeyValue = await decryptApiKeyValue(apiKeyValue.encrypted, region, cli);
+          // use region specified for KMS keys, otherwise take the region from command line
+          const kmsKeyRegion = apiKeyValue.kmsKeyRegion || region;
+          apiKeyValue = await decryptApiKeyValue(apiKeyValue.encrypted, kmsKeyRegion, serverless.cli);
         }
       }
 

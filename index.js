@@ -247,7 +247,7 @@ const associateRestApiWithUsagePlan = async function associateRestApiWithUsagePl
  * @param {string} encryptedApiKeyValue Encrypted value for the API key
  * @param {string} region AWS region.
  */
-const decryptApiKeyValue = async function decryptApiKeyValue(encryptedApiKeyValue, region) {
+const decryptApiKeyValue = async function decryptApiKeyValue(encryptedApiKeyValue, region, cli) {
   const kms = new AWS.KMS({ apiVersion: '2014-11-01', region });
   try {
     const decryptedApiKeyValue = await kms
@@ -256,6 +256,7 @@ const decryptApiKeyValue = async function decryptApiKeyValue(encryptedApiKeyValu
       .then(data => data.Plaintext.toString('ascii'));
       return decryptedApiKeyValue;
   } catch (error) {
+    cli.consoleLog(`AddApiKey: ${chalk.yellow(`Value ${encryptedApiKeyValue.substring(0, 10)}... can not be decrypted properly with keys in KMS in region ${region}`)}`);
     return null;        
   }
 }
@@ -280,7 +281,7 @@ const addApiKey = async function addApiKey(serverless) {
 
         // if KMS encrypted value configured, encrypt it using KMS
         if(typeof apiKeyValue === 'object' && apiKey.value.encrypted) {
-          apiKeyValue = await decryptApiKeyValue(apiKey.value.encrypted, region);
+          apiKeyValue = await decryptApiKeyValue(apiKey.value.encrypted, region, cli);
         }
       }
 

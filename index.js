@@ -256,7 +256,7 @@ const decryptApiKeyValue = async function decryptApiKeyValue(encryptedApiKeyValu
       .promise()
       .then(data => data.Plaintext.toString('ascii'));
 
-      cli.consoleLog(`AddApiKey: ${chalk.yellow(`Successfully decrypted value of "{${encryptedApiKeyValue.substring(0, 10)}..." using KMS key in ${kmsKeyRegion}`)}`);
+      cli.consoleLog(`AddApiKey: ${chalk.yellow(`Successfully decrypted value of "${encryptedApiKeyValue.substring(0, 10)}..." using KMS key in ${kmsKeyRegion}`)}`);
       return decryptedApiKeyValue;
   } catch (error) {
     cli.consoleLog(`AddApiKey: ${chalk.yellow(`Value "${encryptedApiKeyValue.substring(0, 10)}..." can not be decrypted properly with keys in KMS in region ${kmsKeyRegion}`)}. The value for the key will be generated.`);

@@ -5,6 +5,10 @@ A [serverless](http://www.serverless.com) plugin to create api key and usage pat
 Serverless provides this functionality natively but it doesn't allow you to associate multiple services with same apiKey and usage plan.
 This plugin associates your Serverless service with same api key if the key already exists. Also works with multiple keys.
 
+The plugin supports serverless stages, so you can create key(s) with different name in different stage.
+
+*__P.S.__ The plugin by default displays the created key and value on the console. If you wish to avoid that then specify `--conceal` option with `sls deploy` command*
+
 ## Install
 
 `npm install --save-dev serverless-add-api-key`
@@ -17,24 +21,32 @@ plugins:
 ```
 
 ## Configuration
+
+### Specifying key(s) and let AWS auto set the value.
 ```yaml
 custom:
   apiKeys:
-    - name: name1
-    - name: name2
+    dev: # dev is the default stage, so even if you don't use stages please specify the key names under dev
+      - name: name1
+      - name: name2
+    prod:
+      - name: name1
+    other-stage-name:
+      - name: name5
+
 ```
-Code automatically creates a usage plan called `<api-key-name>-usage-plan`.
 
-### Specifying key values
+### Specifying key values.
 
 ```yaml
 custom:
   apiKeys:
-    - name: SomeKey
-      value: your-api-key-that-is-at-least-20-characters-long
-    - name: KeyFromSlsVariables
-      value: ${opt:MyKey}
-    - SomeOtherKeyThatAssignsRandomValue
+    dev: # dev is the default stage, so even if you don't use stages please specify the key names and values under dev
+      - name: SomeKey
+        value: your-api-key-that-is-at-least-20-characters-long
+      - name: KeyFromSlsVariables
+        value: ${opt:MyKey}
+      - SomeOtherKeyThatAssignsRandomValue
 ```
 
 ### Specifying encrypted key values
@@ -55,3 +67,5 @@ custom:
       kmsKeyRegion: us-west-1
 ```
 When an object with `encrypted` and `kmsKeyRegion` key detected in `value`, the encrypted value will be decrypted using a proper KMS key from the region specified in `kmsKeyRegion`. In the case of missing `kmsKeyRegion`, the region from command line will be used. 
+
+Code automatically creates usage plan called `<api-key-name>-usage-plan`.

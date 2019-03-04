@@ -139,7 +139,7 @@ const createKey  = async function createKey(key, keyValue, creds, region, cli) {
 
     const resp = await apigateway.createApiKey(params).promise();
     cli.consoleLog(`AddApiKey: ${chalk.yellow(`Created new api key ${key}:${resp.id}`)}`);
-    return resp.id;
+    return { id: resp.id, value: resp.value };
   } catch (error) {
     cli.consoleLog(`AddApiKey: ${chalk.yellow(`Failed to create new api key. Error ${error.message || error}`)}`);
     throw error;
@@ -268,65 +268,84 @@ const decryptApiKeyValue = async function decryptApiKeyValue(encryptedApiKeyValu
  * Main function that adds api key.
  * @param {Object} serverless Serverless object
  */
-const addApiKey = async function addApiKey(serverless) {
+const addApiKey = async function addApiKey(serverless, options) {
   const provider = serverless.getProvider('aws');
   const awsCredentials = provider.getCredentials();
   const region = provider.getRegion();
   const stage = provider.getStage();
-  const apiKeys = serverless.service.custom.apiKeys || [];
+  console.log(stage);
+  const conceal = options.conceal;
+  const apiKeysForStages = serverless.service.custom.apiKeys;
+  const apiKeys = apiKeysForStages ? apiKeysForStages[stage] : []
   const serviceName = serverless.service.getServiceName();
 
+  const results = [];
+
+  if (!apiKeys.length) {
+    serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`No ApiKey names specified for stage ${stage} so skipping creation`)}`);
+  }
+
   for (let apiKey of apiKeys) {
-      let apiKeyValue = null;
-      const apiKeyName = apiKey.name;
-      if(apiKey.value){
-        apiKeyValue = apiKey.value;
-        // if KMS encrypted value configured, encrypt it using KMS
-        if(typeof apiKeyValue === 'object' && apiKeyValue.encrypted) {
-          // use region specified for KMS keys, otherwise take the region from command line
-          const kmsKeyRegion = apiKeyValue.kmsKeyRegion || region;
-          apiKeyValue = await decryptApiKeyValue(apiKeyValue.encrypted, kmsKeyRegion, serverless.cli);
+    let apiKeyValue = null;
+    const apiKeyName = apiKey.name;
+    if(apiKey.value){
+      apiKeyValue = apiKey.value;
+      // if KMS encrypted value configured, encrypt it using KMS
+      if(typeof apiKeyValue === 'object' && apiKeyValue.encrypted) {
+        // use region specified for KMS keys, otherwise take the region from command line
+        const kmsKeyRegion = apiKeyValue.kmsKeyRegion || region;
+        apiKeyValue = await decryptApiKeyValue(apiKeyValue.encrypted, kmsKeyRegion, serverless.cli);
+      }
+    }
+
+    try {
+
+      const planName = `${apiKeyName}-usage-plan`;
+      const apiKey = await getApiKey(apiKeyName, awsCredentials.credentials, region, serverless.cli);
+      let usagePlan = await getUsagePlan(planName, awsCredentials.credentials, region, serverless.cli);
+
+      let apiKeyId = null;
+      let usagePlanId = null;
+
+      // if api key doesn't exist, create one.
+      if (!apiKey) {
+        const { id, value } = await createKey(apiKeyName, apiKeyValue, awsCredentials.credentials, region, serverless.cli);
+        apiKeyId = id;
+        if (!conceal) {
+          results.push(
+            {
+              key: apiKeyName,
+              value
+            }
+          );
         }
+      } else {
+        serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Api key ${apiKeyName} already exists, skipping creation.`)}`);
+        apiKeyId = apiKey.id;
       }
 
-      try {
-
-        const planName = `${apiKeyName}-usage-plan`;
-        const apiKey = await getApiKey(apiKeyName, awsCredentials.credentials, region, serverless.cli);
-        let usagePlan = await getUsagePlan(planName, awsCredentials.credentials, region, serverless.cli);
-
-        let apiKeyId = null;
-        let usagePlanId = null;
-
-        // if api key doesn't exist, create one.
-        if (!apiKey) {
-          apiKeyId = await createKey(apiKeyName, apiKeyValue, awsCredentials.credentials, region, serverless.cli);
-        } else {
-          serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Api key ${apiKeyName} already exists, skipping creation.`)}`);
-          apiKeyId = apiKey.id;
-        }
-
-        // if usage plan doesn't exist create one and associate the created api key with it.
-        // if usage plan already exists then associate the key with it, if its not already associated.
-        if (!usagePlan) {
-          usagePlanId = await createUsagePlan(planName, awsCredentials.credentials, region, serverless.cli);
+      // if usage plan doesn't exist create one and associate the created api key with it.
+      // if usage plan already exists then associate the key with it, if its not already associated.
+      if (!usagePlan) {
+        usagePlanId = await createUsagePlan(planName, awsCredentials.credentials, region, serverless.cli);
+        await createUsagePlanKey(apiKeyId, usagePlanId, awsCredentials.credentials, region, serverless.cli);
+        usagePlan = { id: usagePlanId, apiStages: [] };
+      } else {
+        serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Usage plan ${planName} already exists, skipping creation.`)}`);
+        usagePlanId = usagePlan.id;
+        const existingKeys = await getUsagePlanKeys(usagePlanId, awsCredentials.credentials, region, serverless.cli);
+        if (!existingKeys.some(key => key.id === apiKeyId)) {
           await createUsagePlanKey(apiKeyId, usagePlanId, awsCredentials.credentials, region, serverless.cli);
-          usagePlan = { id: usagePlanId, apiStages: [] };
         } else {
-          serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Usage plan ${planName} already exists, skipping creation.`)}`);
-          usagePlanId = usagePlan.id;
-          const existingKeys = await getUsagePlanKeys(usagePlanId, awsCredentials.credentials, region, serverless.cli);
-          if (!existingKeys.some(key => key.id === apiKeyId)) {
-            await createUsagePlanKey(apiKeyId, usagePlanId, awsCredentials.credentials, region, serverless.cli);
-          } else {
-            serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Usage plan ${planName} already has api key associated with it, skipping association.`)}`);
-          }
+          serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Usage plan ${planName} already has api key associated with it, skipping association.`)}`);
         }
-        await associateRestApiWithUsagePlan(serviceName, usagePlan, stage, awsCredentials.credentials, region, serverless.cli);
-      } catch (error) {
-        serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Failed to add api key the service. Error ${error.message || error}`)}`);
       }
-   }
+      await associateRestApiWithUsagePlan(serviceName, usagePlan, stage, awsCredentials.credentials, region, serverless.cli);
+    } catch (error) {
+      serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Failed to add api key the service. Error ${error.message || error}`)}`);
+    }
+  }
+  results.forEach(result => serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`${result.key} - ${result.value}`)}`));
 };
 
 /**
@@ -337,7 +356,7 @@ class AddApiKey {
     this.options = options;
     this.hooks = {
       'after:deploy:deploy': async function () {
-        await addApiKey(serverless);
+        await addApiKey(serverless, options);
       }
     };
   }

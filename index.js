@@ -260,7 +260,7 @@ const decryptApiKeyValue = async function decryptApiKeyValue(encryptedApiKeyValu
       return decryptedApiKeyValue;
   } catch (error) {
     cli.consoleLog(`AddApiKey: ${chalk.yellow(`Value "${encryptedApiKeyValue.substring(0, 10)}..." can not be decrypted properly with keys in KMS in region ${kmsKeyRegion}`)}. The value for the key will be generated.`);
-    return null;        
+    throw error;       
   }
 }
 

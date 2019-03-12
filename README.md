@@ -48,4 +48,25 @@ custom:
         value: ${opt:MyKey}
       - SomeOtherKeyThatAssignsRandomValue
 ```
+
+### Specifying encrypted key values
+
+In the case that you do not want to expose your raw API key string in your repository, you could check in the encrypted API key strings using KMS key in a region. To do this, first Use a KMS key in the region from command line to encrypt the key:
+```
+  aws kms encrypt --key-id f7c59c6b-83de-4e80-8011-0fbd6846c695 --plaintext BzQ86PiX9t9UaAQsNWuFHN9oOkiyOwd9yXBu8RF1 | base64 --decode
+```
+
+Then configure the `value` as { encrypted: "AQICAHinIKhx8yV+y97+qS5naGEBUQrTP8RPE4HDnVvd0AzJ/wGF2tC0dPMHO..." }
+
+```yaml
+custom:
+  apiKeys:
+    dev: # dev is the default stage, so even if you don't use stages please specify the key names and values under dev
+      - name: KMSEncryptedKey
+        value:
+          encrypted: A-KMS-Encrypted-Value
+          kmsKeyRegion: us-west-1
+```
+When an object with `encrypted` and `kmsKeyRegion` key detected in `value`, the encrypted value will be decrypted using a proper KMS key from the region specified in `kmsKeyRegion`. In the case of missing `kmsKeyRegion`, the region from command line will be used. 
+
 Code automatically creates usage plan called `<api-key-name>-usage-plan`.

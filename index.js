@@ -164,7 +164,7 @@ const createUsagePlan = async (name, creds, region, cli, usagePlanTemplate) => {
   try {
     let plan = { name };
     if (usagePlanTemplate) {
-      plan = Object.assign({}, usagePlanTemplate, { name, description: (usagePlanTemplate.name ? `Copied from ${usagePlanTemplate.name}` : '')});
+      plan = Object.assign({}, usagePlanTemplate, { name });
     }
     const resp = await apigateway.createUsagePlan(plan).promise();
     return resp.id;

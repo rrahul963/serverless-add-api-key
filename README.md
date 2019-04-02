@@ -55,8 +55,8 @@ custom:
       usagePlan: name-of-same-usage-plan
     - name: ThirdKey
       usagePlan:
-        name: "name-of-third-plan"
-        description: "Description of third plan"
+        name: "name-of-second-plan"
+        description: "Description of second plan"
         quota:
           limit: 2000
           period: DAY

@@ -298,7 +298,7 @@ const addApiKey = async (serverless, options) => {
     }
 
     try {
-      const planName = `${apiKeyName}-usage-plan`;
+      const planName = serverless.service.custom.usagePlanName || `${apiKeyName}-usage-plan`;
       const apiKey = await getApiKey(apiKeyName, awsCredentials.credentials, region, serverless.cli);
       let usagePlan = await getUsagePlan(planName, awsCredentials.credentials, region, serverless.cli);
 

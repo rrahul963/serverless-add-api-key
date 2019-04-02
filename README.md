@@ -30,6 +30,7 @@ custom:
   apiKeys:
     - name: name1
     - name: name2
+  usagePlanName: 'my-custom-usage-plan-name' # optional. defaults to `${apiKeyName}-usage-plan`
 ```
 
 ### Specifying key values
@@ -42,6 +43,7 @@ custom:
     - name: KeyFromSlsVariables
       value: ${opt:MyKey}
     - SomeOtherKeyThatAssignsRandomValue
+  usagePlanName: 'my-custom-usage-plan-name' # optional. defaults to `${apiKeyName}-usage-plan`
 ```
 
 ### Stage-specific configuration

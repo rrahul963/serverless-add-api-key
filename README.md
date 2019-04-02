@@ -55,6 +55,8 @@ custom:
       usagePlan: name-of-same-usage-plan
 ```
 
+If the usage plan needs to be created, it will be created with the provider.usagePlan values, if defined. Otherwise no parameters.
+
 ### Stage-specific configuration
 
 To specifiy different API keys for each stage, nest the configuration in a property with the name of the relevant stage.

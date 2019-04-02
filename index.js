@@ -152,16 +152,18 @@ const createKey = async (key, keyValue, creds, region, cli) => {
  * @param {Object} creds AWS credentials.
  * @param {string} region AWS region.
  * @param {Object} cli Serverless CLI object
+ * @param {Object} [usagePlan] The parameters for the usagePlan to create.
  * @returns {string} Usage plan id.
  */
-const createUsagePlan = async (name, creds, region, cli) => {
+const createUsagePlan = async (name, creds, region, cli, usagePlan) => {
   const apigateway = new AWS.APIGateway({
     credentials: creds,
     region
   });
   cli.consoleLog(`AddApiKey: ${chalk.yellow(`Creating new usage plan ${name}`)}`);
   try {
-    const resp = await apigateway.createUsagePlan({ name }).promise();
+    const plan = usagePlan ? Object.assign({}, usagePlan, { name }) : { name };
+    const resp = await apigateway.createUsagePlan(plan).promise();
     return resp.id;
   } catch (error) {
     cli.consoleLog(`AddApiKey: ${chalk.yellow(`Failed to create new usage plan. Error ${error.message || error}`)}`);
@@ -323,7 +325,8 @@ const addApiKey = async (serverless, options) => {
       // if usage plan doesn't exist create one and associate the created api key with it.
       // if usage plan already exists then associate the key with it, if its not already associated.
       if (!usagePlan) {
-        usagePlanId = await createUsagePlan(planName, awsCredentials.credentials, region, serverless.cli);
+        const defaultUsagePlan = (serverless.service.provider && serverless.service.provider.usagePlan) || {};
+        usagePlanId = await createUsagePlan(planName, awsCredentials.credentials, region, serverless.cli, defaultUsagePlan);
         await createUsagePlanKey(apiKeyId, usagePlanId, awsCredentials.credentials, region, serverless.cli);
         usagePlan = { id: usagePlanId, apiStages: [] };
       } else {

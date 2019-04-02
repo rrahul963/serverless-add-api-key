@@ -162,7 +162,10 @@ const createUsagePlan = async (name, creds, region, cli, usagePlan) => {
   });
   cli.consoleLog(`AddApiKey: ${chalk.yellow(`Creating new usage plan ${name}`)}`);
   try {
-    const plan = usagePlan ? Object.assign({}, usagePlan, { name }) : { name };
+    let plan = { name };
+    if (usagePlan) {
+      plan = Object.assign({}, usagePlan, { name, description: (usagePlan.name ? `Copied from ${usagePlan.name}` : '')});
+    }
     const resp = await apigateway.createUsagePlan(plan).promise();
     return resp.id;
   } catch (error) {

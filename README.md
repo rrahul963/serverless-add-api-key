@@ -53,9 +53,19 @@ custom:
       usagePlan: name-of-same-usage-plan
     - name: SomeOtherKey
       usagePlan: name-of-same-usage-plan
+    - name: ThirdKey
+      usagePlan:
+        name: "name-of-third-plan"
+        description: "Description of third plan"
+        quota:
+          limit: 2000
+          period: DAY
+        throttle:
+          burstLimit: 100
+          rateLimit: 20
 ```
 
-If the usage plan needs to be created, it will be created with the provider.usagePlan values, if defined. Otherwise no parameters.
+If the usage plan needs to be created, first it will look for a usagePlan property that is an object with a name property. If it does not find that it will use the usagePlan attribtues defined in the `provider` section, if defined.
 
 ### Stage-specific configuration
 

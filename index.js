@@ -287,6 +287,7 @@ const addApiKey = async (serverless, options) => {
   for (let apiKey of apiKeys) {
     let apiKeyValue = null;
     const apiKeyName = apiKey.name;
+    const planName = apiKey.usagePlan || `${apiKeyName}-usage-plan`;
     if (apiKey.value) {
       apiKeyValue = apiKey.value;
       // if KMS encrypted value configured, encrypt it using KMS
@@ -298,7 +299,6 @@ const addApiKey = async (serverless, options) => {
     }
 
     try {
-      const planName = `${apiKeyName}-usage-plan`;
       const apiKey = await getApiKey(apiKeyName, awsCredentials.credentials, region, serverless.cli);
       let usagePlan = await getUsagePlan(planName, awsCredentials.credentials, region, serverless.cli);
 

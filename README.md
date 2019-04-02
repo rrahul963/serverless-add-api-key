@@ -44,6 +44,17 @@ custom:
     - SomeOtherKeyThatAssignsRandomValue
 ```
 
+### Specifying usage plan (To put both keys in the same usage plan)
+
+```yaml
+custom:
+  apiKeys:
+    - name: SomeKey
+      usagePlan: name-of-same-usage-plan
+    - name: SomeOtherKey
+      usagePlan: name-of-same-usage-plan
+```
+
 ### Stage-specific configuration
 
 To specifiy different API keys for each stage, nest the configuration in a property with the name of the relevant stage.

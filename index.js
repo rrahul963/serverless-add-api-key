@@ -297,7 +297,7 @@ const addApiKey = async (serverless, options) => {
     // if we have a defined usagePlan object, us it's .name. If it's a string, use that. Otherwise a default.
     const planName = (apiKey.usagePlan && apiKey.usagePlan.name) ? apiKey.usagePlan.name : (apiKey.usagePlan || `${apiKeyName}-usage-plan`);
     // when creating a plan, use the one defined if set, otherwise the default or blank
-    const createPlan = (apiKey.usagePlan && apiKey.usagePlan.name) ? apiKey.usagePlan : defaultUsagePlan;
+    const usagePlanTemplate = (apiKey.usagePlan && apiKey.usagePlan.name) ? apiKey.usagePlan : defaultUsagePlan;
 
     if (apiKey.value) {
       apiKeyValue = apiKey.value;
@@ -334,7 +334,7 @@ const addApiKey = async (serverless, options) => {
       // if usage plan doesn't exist create one and associate the created api key with it.
       // if usage plan already exists then associate the key with it, if its not already associated.
       if (!usagePlan) {
-        usagePlanId = await createUsagePlan(planName, awsCredentials.credentials, region, serverless.cli, createPlan);
+        usagePlanId = await createUsagePlan(planName, awsCredentials.credentials, region, serverless.cli, usagePlanTemplate);
         await createUsagePlanKey(apiKeyId, usagePlanId, awsCredentials.credentials, region, serverless.cli);
         usagePlan = { id: usagePlanId, apiStages: [] };
       } else {

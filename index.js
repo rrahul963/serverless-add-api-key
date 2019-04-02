@@ -152,10 +152,10 @@ const createKey = async (key, keyValue, creds, region, cli) => {
  * @param {Object} creds AWS credentials.
  * @param {string} region AWS region.
  * @param {Object} cli Serverless CLI object
- * @param {Object} [usagePlan] The parameters for the usagePlan to create.
+ * @param {Object} [usagePlanTemplate] The parameters for the usagePlan to create.
  * @returns {string} Usage plan id.
  */
-const createUsagePlan = async (name, creds, region, cli, usagePlan) => {
+const createUsagePlan = async (name, creds, region, cli, usagePlanTemplate) => {
   const apigateway = new AWS.APIGateway({
     credentials: creds,
     region
@@ -163,8 +163,8 @@ const createUsagePlan = async (name, creds, region, cli, usagePlan) => {
   cli.consoleLog(`AddApiKey: ${chalk.yellow(`Creating new usage plan ${name}`)}`);
   try {
     let plan = { name };
-    if (usagePlan) {
-      plan = Object.assign({}, usagePlan, { name, description: (usagePlan.name ? `Copied from ${usagePlan.name}` : '')});
+    if (usagePlanTemplate) {
+      plan = Object.assign({}, usagePlanTemplate, { name, description: (usagePlanTemplate.name ? `Copied from ${usagePlanTemplate.name}` : '')});
     }
     const resp = await apigateway.createUsagePlan(plan).promise();
     return resp.id;

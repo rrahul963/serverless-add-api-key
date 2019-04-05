@@ -51,7 +51,14 @@ custom:
   apiKeys:
     - name: SomeKey
       usagePlan:
-        name: "name-of-first-usage-plan"
+        name: "name-of-first-usage-plan" (required if usagePlan is specified. rest of the fields are optional)
+        description: "Description of first plan"
+        quota:
+          limit: 1000
+          period: DAY
+        throttle:
+          burstLimit: 100
+          rateLimit: 20
     - name: SomeOtherKey
       usagePlan:
         name: "name-of-first-usage-plan"

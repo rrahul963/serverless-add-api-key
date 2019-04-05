@@ -119,4 +119,3 @@ custom:
 
 When an object with `encrypted` and `kmsKeyRegion` key detected in `value`, the encrypted value will be decrypted using a proper KMS key from the region specified in `kmsKeyRegion`. In the case of missing `kmsKeyRegion`, the region from command line will be used.
 
-Code automatically creates usage plan called `<api-key-name>-usage-plan`.

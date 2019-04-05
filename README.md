@@ -44,7 +44,7 @@ custom:
     - SomeOtherKeyThatAssignsRandomValue
 ```
 
-### Specifying usage plan (To put both keys in the same usage plan)
+### Specifying usage plan
 
 ```yaml
 custom:

@@ -295,9 +295,9 @@ const addApiKey = async (serverless, options) => {
     let apiKeyValue = null;
     const apiKeyName = apiKey.name;
     // if we have a defined usagePlan object, us it's .name. If it's a string, use that. Otherwise a default.
-    const planName = (apiKey.usagePlan && apiKey.usagePlan.name) ? apiKey.usagePlan.name : (apiKey.usagePlan || `${apiKeyName}-usage-plan`);
+    const planName = (apiKey.usagePlan && apiKey.usagePlan.name) ? apiKey.usagePlan.name : `${apiKeyName}-usage-plan`;
     // when creating a plan, use the one defined if set, otherwise the default or blank
-    const usagePlanTemplate = (apiKey.usagePlan && apiKey.usagePlan.name) ? apiKey.usagePlan : defaultUsagePlan;
+    const usagePlanTemplate = (apiKey.usagePlan && (apiKey.usagePlan.quota || apiKey.throttle)) ? apiKey.usagePlan : defaultUsagePlan;
 
     if (apiKey.value) {
       apiKeyValue = apiKey.value;

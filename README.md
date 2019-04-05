@@ -50,9 +50,11 @@ custom:
 custom:
   apiKeys:
     - name: SomeKey
-      usagePlan: name-of-same-usage-plan
+      usagePlan:
+        name: "name-of-first-usage-plan"
     - name: SomeOtherKey
-      usagePlan: name-of-same-usage-plan
+      usagePlan:
+        name: "name-of-first-usage-plan"
     - name: ThirdKey
       usagePlan:
         name: "name-of-second-plan"
@@ -63,9 +65,22 @@ custom:
         throttle:
           burstLimit: 100
           rateLimit: 20
+    - name: AKeyWithNoUsagePlan
+provider:
+  usagePlan:
+    name: "default-usage-plan"
+    description: "Used for serverless as the default for the process or for custom apiKeys above if no usagePlan is provided"
+    quota:
+      limit: 5000
+      period: DAY
+    throttle:
+      burstLimit: 100
+      rateLimit: 50
 ```
 
 If the usage plan needs to be created, first it will look for a usagePlan property that is an object with a name property. If it does not find that it will use the usagePlan attribtues defined in the `provider` section, if defined.
+
+NOTE: If not specified in the configuration, an individual usagePlan will be created for each key listed. For example, `AKeyWithNoUsagePlan` will have an individual usage plan named `AKeyWithNoUsagePlan-usage-plan` with no restrictions.
 
 ### Stage-specific configuration
 

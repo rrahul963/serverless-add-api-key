@@ -278,7 +278,6 @@ const addApiKey = async (serverless, options) => {
   const apiKeys = Array.isArray(apiKeysForStages) ? apiKeysForStages : apiKeysForStages[stage];
   const serviceName = serverless.service.getServiceName();
   const stackName = serverless.service.provider.stackName || `${serviceName}-${stage}`;
-git
   const results = [];
 
   if (!apiKeys || !apiKeys.length) {

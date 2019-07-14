@@ -152,19 +152,24 @@ const createKey = async (key, keyValue, creds, region, cli) => {
  * @param {Object} creds AWS credentials.
  * @param {string} region AWS region.
  * @param {Object} cli Serverless CLI object
+ * @param {Object} [usagePlanTemplate] The parameters for the usagePlan to create.
  * @returns {string} Usage plan id.
  */
-const createUsagePlan = async (name, creds, region, cli) => {
+const createUsagePlan = async (name, creds, region, cli, usagePlanTemplate) => {
   const apigateway = new AWS.APIGateway({
     credentials: creds,
     region
   });
   cli.consoleLog(`AddApiKey: ${chalk.yellow(`Creating new usage plan ${name}`)}`);
   try {
-    const resp = await apigateway.createUsagePlan({ name }).promise();
+    let plan = { name };
+    if (usagePlanTemplate) {
+      plan = Object.assign({}, usagePlanTemplate, { name });
+    }
+    const resp = await apigateway.createUsagePlan(plan).promise();
     return resp.id;
   } catch (error) {
-    cli.consoleLog(`AddApiKey: ${chalk.yellow(`Failed to create new usage plan. Error ${error.message || error}`)}`);
+    cli.consoleLog(`AddApiKey: ${chalk.yellow(`Failed to create new usage plan ${name}. Error ${error.message || error}`)}`);
     throw error;
   }
 };
@@ -284,9 +289,16 @@ const addApiKey = async (serverless, options) => {
     serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`No ApiKey names specified for stage ${stage} so skipping creation`)}`);
   }
 
+  const defaultUsagePlan = (serverless.service.provider && serverless.service.provider.usagePlan) || {};
+
   for (let apiKey of apiKeys) {
     let apiKeyValue = null;
     const apiKeyName = apiKey.name;
+    // if we have a defined usagePlan object, us it's .name. If it's a string, use that. Otherwise a default.
+    const planName = (apiKey.usagePlan && apiKey.usagePlan.name) ? apiKey.usagePlan.name : `${apiKeyName}-usage-plan`;
+    // when creating a plan, use the one defined if set, otherwise the default or blank
+    const usagePlanTemplate = (apiKey.usagePlan && (apiKey.usagePlan.quota || apiKey.throttle)) ? apiKey.usagePlan : defaultUsagePlan;
+
     if (apiKey.value) {
       apiKeyValue = apiKey.value;
       // if KMS encrypted value configured, encrypt it using KMS
@@ -298,7 +310,6 @@ const addApiKey = async (serverless, options) => {
     }
 
     try {
-      const planName = `${apiKeyName}-usage-plan`;
       const apiKey = await getApiKey(apiKeyName, awsCredentials.credentials, region, serverless.cli);
       let usagePlan = await getUsagePlan(planName, awsCredentials.credentials, region, serverless.cli);
 
@@ -323,7 +334,7 @@ const addApiKey = async (serverless, options) => {
       // if usage plan doesn't exist create one and associate the created api key with it.
       // if usage plan already exists then associate the key with it, if its not already associated.
       if (!usagePlan) {
-        usagePlanId = await createUsagePlan(planName, awsCredentials.credentials, region, serverless.cli);
+        usagePlanId = await createUsagePlan(planName, awsCredentials.credentials, region, serverless.cli, usagePlanTemplate);
         await createUsagePlanKey(apiKeyId, usagePlanId, awsCredentials.credentials, region, serverless.cli);
         usagePlan = { id: usagePlanId, apiStages: [] };
       } else {

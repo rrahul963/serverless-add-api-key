@@ -44,6 +44,51 @@ custom:
     - SomeOtherKeyThatAssignsRandomValue
 ```
 
+### Specifying usage plan
+
+```yaml
+custom:
+  apiKeys:
+    - name: SomeKey
+      usagePlan:
+        name: "name-of-first-usage-plan" (required if usagePlan is specified. rest of the fields are optional)
+        description: "Description of first plan"
+        quota:
+          limit: 1000
+          period: DAY
+        throttle:
+          burstLimit: 100
+          rateLimit: 20
+    - name: SomeOtherKey
+      usagePlan:
+        name: "name-of-first-usage-plan"
+    - name: ThirdKey
+      usagePlan:
+        name: "name-of-second-plan"
+        description: "Description of second plan"
+        quota:
+          limit: 2000
+          period: DAY
+        throttle:
+          burstLimit: 100
+          rateLimit: 20
+    - name: AKeyWithNoUsagePlan
+provider:
+  usagePlan:
+    name: "default-usage-plan"
+    description: "Used for serverless as the default for the process or for custom apiKeys above if no usagePlan is provided"
+    quota:
+      limit: 5000
+      period: DAY
+    throttle:
+      burstLimit: 100
+      rateLimit: 50
+```
+
+If the usage plan needs to be created, first it will look for a usagePlan property that is an object with a name property. If it does not find that it will use the usagePlan attribtues defined in the `provider` section, if defined.
+
+NOTE: If not specified in the configuration, an individual usagePlan will be created for each key listed. For example, `AKeyWithNoUsagePlan` will have an individual usage plan named `AKeyWithNoUsagePlan-usage-plan` with no restrictions.
+
 ### Stage-specific configuration
 
 To specifiy different API keys for each stage, nest the configuration in a property with the name of the relevant stage.
@@ -81,4 +126,3 @@ custom:
 
 When an object with `encrypted` and `kmsKeyRegion` key detected in `value`, the encrypted value will be decrypted using a proper KMS key from the region specified in `kmsKeyRegion`. In the case of missing `kmsKeyRegion`, the region from command line will be used.
 
-Code automatically creates usage plan called `<api-key-name>-usage-plan`.

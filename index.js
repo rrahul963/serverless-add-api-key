@@ -205,12 +205,12 @@ const createUsagePlanKey = async (apiKeyId, usagePlanId, creds, region, cli) => 
  * @param {string} region AWS region.
  * @param {Object} cli Serverless CLI object
  */
-const associateRestApiWithUsagePlan = async (serviceName, usagePlan, stage, creds, region, cli) => {
+const associateRestApiWithUsagePlan = async (stackName, usagePlan, stage, creds, region, cli) => {
   const cfn = new AWS.CloudFormation({
     credentials: creds,
     region
   });
-  const stack = await cfn.describeStacks({ StackName: `${serviceName}-${stage}` }).promise();
+  const stack = await cfn.describeStacks({ StackName: `${stackName}` }).promise();
   const { Outputs } = stack.Stacks[0];
   let apiName = null;
   Outputs.forEach(o => {
@@ -277,7 +277,7 @@ const addApiKey = async (serverless, options) => {
   const apiKeysForStages = serverless.service.custom.apiKeys || [];
   const apiKeys = Array.isArray(apiKeysForStages) ? apiKeysForStages : apiKeysForStages[stage];
   const serviceName = serverless.service.getServiceName();
-
+  const stackName = serverless.service.provider.stackName || `${serviceName}-${stage}`;
   const results = [];
 
   if (!apiKeys || !apiKeys.length) {
@@ -336,7 +336,7 @@ const addApiKey = async (serverless, options) => {
           serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Usage plan ${planName} already has api key associated with it, skipping association.`)}`);
         }
       }
-      await associateRestApiWithUsagePlan(serviceName, usagePlan, stage, awsCredentials.credentials, region, serverless.cli);
+      await associateRestApiWithUsagePlan(stackName, usagePlan, stage, awsCredentials.credentials, region, serverless.cli);
     } catch (error) {
       serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`Failed to add api key the service. Error ${error.message || error}`)}`);
     }

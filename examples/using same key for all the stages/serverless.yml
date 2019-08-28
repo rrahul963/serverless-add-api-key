@@ -24,11 +24,13 @@ custom:
         kmsKeyRegion: us-west-2
     - name: key-with-usage-plan-name-and-value
       value: some-value
-      usagePlan: some-plan-mame
+      usagePlan:
+        name: some-plan-mame
     - name: key-with-usage-plan-detail-and-value
       value: some-value
-      usagePlan: some-plan-mame
-      description: Description of first plan
+      usagePlan:
+        name: some-plan-mame
+        description: Description of first plan
         quota:
           limit: 1000
           period: DAY

@@ -1,6 +1,6 @@
 # serverless-add-api-key
 
-[![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com)
+[![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com) [![](https://travis-ci.org/rrahul963/serverless-add-api-key.svg?branch=master)]()
 
 A [serverless](http://www.serverless.com) plugin to create api key and usage pattern (if they don't already exist) and associate them to the Rest Api.
 Serverless provides this functionality natively but it doesn't allow you to associate multiple services with same apiKey and usage plan.

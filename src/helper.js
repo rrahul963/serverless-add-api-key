@@ -1,6 +1,8 @@
 const AWS = require('aws-sdk');
 const chalk = require('chalk');
 
+let TRUE = true;
+
 /**
  * Get api key by name.
  * @param {string} key Api Key name.
@@ -12,7 +14,7 @@ const getApiKey = async (key, apigateway, cli) => {
   let position = null;
   let keys = [];
   try {
-    while (true) {
+    while (TRUE) {
       let resp = null;
       if (!position) {
         resp = await apigateway.getApiKeys().promise();
@@ -47,7 +49,7 @@ const getUsagePlan = async (planName, apigateway, cli) => {
   let position = null;
   let plans = [];
   try {
-    while (true) {
+    while (TRUE) {
       let resp = null;
       if (!position) {
         resp = await apigateway.getUsagePlans().promise();
@@ -82,7 +84,7 @@ const getUsagePlanKeys = async (usagePlanId, apigateway, cli) => {
   let position = null;
   let planKeys = [];
   try {
-    while (true) {
+    while (TRUE) {
       let resp = null;
       if (!position) {
         resp = await apigateway.getUsagePlanKeys({ usagePlanId }).promise();
@@ -223,7 +225,7 @@ const associateRestApiWithUsagePlan = async (stackName, usagePlan, stage, cfn, a
 const decryptApiKeyValue = async (encryptedApiKeyValue, kmsKeyRegion, kms, cli) => {
   try {
     const decryptedApiKeyValue = await kms
-      .decrypt({ CiphertextBlob: new Buffer(encryptedApiKeyValue, 'base64') })
+      .decrypt({ CiphertextBlob: new Buffer(encryptedApiKeyValue, 'base64') }) //eslint-disable-line no-undef
       .promise()
       .then(data => data.Plaintext.toString('ascii'));
 

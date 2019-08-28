@@ -1,10 +1,6 @@
-const awsMock = require('aws-sdk-mock');
-const AWS = require('aws-sdk');
-const sinon = require('sinon');
-const awsSinon = require('mock-aws-sinon');
 require('should');
-
-// const { describe, it, beforeEach, afterEach, before, after } = require('mocha');
+const sinon = require('sinon');
+const AWS = require('aws-sdk');
 
 const plugin = require('../../src/helper');
 
@@ -62,7 +58,7 @@ describe('test addApiKey function', () => {
 
   it('should skip creation as no keys provided', done => {
     plugin.addApiKey(serverless, {})
-    .then(resp => {
+    .then(() => {
       sandbox.assert.notCalled(plugin.decryptApiKeyValue);
       done();
     })
@@ -779,7 +775,7 @@ describe('test decryptApiKeyValue function', () => {
     let kmsMock;
     before(() => {
       kmsMock = new AWS.KMS();
-      kmsMockPromise = {
+      const kmsMockPromise = {
         promise: sinon.fake.rejects(new Error('failed'))
       };
       kmsMock = {
@@ -803,7 +799,7 @@ describe('test decryptApiKeyValue function', () => {
     let kmsMock;
     before(() => {
       kmsMock = new AWS.KMS();
-      kmsMockPromise = {
+      const kmsMockPromise = {
         promise: sinon.fake.resolves({
           Plaintext: 'decrypted-value'
         })

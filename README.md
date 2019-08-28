@@ -125,3 +125,4 @@ For more info on how to get started with Serverless Framework click [here](https
 ### Revisions:
 
 3.3.0 - Added UsagePlan settings
+3.3.1 - Added unit tests, examples and travis-ci

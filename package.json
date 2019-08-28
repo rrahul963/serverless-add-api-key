@@ -1,12 +1,14 @@
 {
   "name": "serverless-add-api-key",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "serverless plugin to create a api key and usage pattern (if they don't already exist) and associates them to the Rest Api",
   "main": "src/index.js",
   "scripts": {
     "test-unit": "mocha test/unittest",
     "coverage": "nyc --reporter=html npm run test-unit",
-    "pre-push": "npm run test-unit"
+    "pre-push": "npm run test-unit",
+    "lint": "eslint .",
+    "pre-commit": "npm run lint"
   },
   "repository": {
     "type": "git",
@@ -31,9 +33,8 @@
     "chalk": "^2.4.1"
   },
   "devDependencies": {
-    "aws-sdk-mock": "^4.5.0",
+    "eslint": "^6.2.2",
     "mocha": "^6.1.4",
-    "mock-aws-sinon": "^1.3.2",
     "nyc": "^14.1.1",
     "should": "^13.2.3",
     "sinon": "^7.3.2"

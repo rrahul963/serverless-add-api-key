@@ -1,0 +1,98 @@
+service: service-name
+frameworkVersion: ">=1.1.0 <2.0.0"
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: ${opt:region, 'us-west-2'}
+  stage: ${opt:stage, 'dev'}
+  accountId:
+    Ref: AWS::AccountId
+  tracing: true
+  deploymentBucket:
+    name: deployment-packages-bucket
+
+custom:
+  test : 1
+  apiKeys:
+    dev:
+    - name: let-aws-set-the-value-for-this-key
+    - name: i-am-proving-a-value-for-the-key
+      value: some-value-for-the-key
+    int:
+    - name: i-am-providing-encrypted-value-for-this-key
+      value:
+        encrypted: some-encrypted-value-for-the-key
+        kmsKeyRegion: us-west-2
+    - name: key-with-usage-plan-name-and-value
+      value: some-value
+      usagePlan:
+        name: some-plan-mame
+    prod:
+    - name: key-with-usage-plan-detail-and-value
+      value: some-value
+      usagePlan:
+        name: some-plan-mame
+        description: Description of first plan
+        quota:
+          limit: 1000
+          period: DAY
+        throttle:
+          burstLimit: 100
+          rateLimit: 20
+
+package:
+  individually: true
+
+plugins:
+  - add-api-key-plugin
+
+functions:
+  test-fn:
+    handler: lambda/index.handler
+    role:
+        "Fn::GetAtt": [ LambdaExecutionRole, Arn ]
+    description: Function description.
+    memorySize: 1024
+    timeout: 30
+    events:
+      - http:
+          path: /
+          method: get
+          private: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Enable-Debug
+              - X-Trace-Context
+            allowCredentials: false
+
+resources:
+  Resources:
+    LambdaExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+        Policies:
+        - PolicyName: testLambdaPolicy-${self:provider.region}
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: "*"

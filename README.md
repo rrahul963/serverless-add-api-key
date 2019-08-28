@@ -23,7 +23,7 @@ plugins:
 
 ## Configuration
 
-### Specifying key(s) and let AWS auto set the value
+### Specifying key(s) and let AWS auto set the value - this is the minimum required configuration to use this plugin
 
 ```yaml
 custom:
@@ -41,68 +41,6 @@ custom:
       value: your-api-key-that-is-at-least-20-characters-long
     - name: KeyFromSlsVariables
       value: ${opt:MyKey}
-    - SomeOtherKeyThatAssignsRandomValue
-```
-
-### Specifying usage plan
-
-```yaml
-custom:
-  apiKeys:
-    - name: SomeKey
-      usagePlan:
-        name: "name-of-first-usage-plan" (required if usagePlan is specified. rest of the fields are optional)
-        description: "Description of first plan"
-        quota:
-          limit: 1000
-          period: DAY
-        throttle:
-          burstLimit: 100
-          rateLimit: 20
-    - name: SomeOtherKey
-      usagePlan:
-        name: "name-of-first-usage-plan"
-    - name: ThirdKey
-      usagePlan:
-        name: "name-of-second-plan"
-        description: "Description of second plan"
-        quota:
-          limit: 2000
-          period: DAY
-        throttle:
-          burstLimit: 100
-          rateLimit: 20
-    - name: AKeyWithNoUsagePlan
-provider:
-  usagePlan:
-    name: "default-usage-plan"
-    description: "Used for serverless as the default for the process or for custom apiKeys above if no usagePlan is provided"
-    quota:
-      limit: 5000
-      period: DAY
-    throttle:
-      burstLimit: 100
-      rateLimit: 50
-```
-
-If the usage plan needs to be created, first it will look for a usagePlan property that is an object with a name property. If it does not find that it will use the usagePlan attribtues defined in the `provider` section, if defined.
-
-NOTE: If not specified in the configuration, an individual usagePlan will be created for each key listed. For example, `AKeyWithNoUsagePlan` will have an individual usage plan named `AKeyWithNoUsagePlan-usage-plan` with no restrictions.
-
-### Stage-specific configuration
-
-To specifiy different API keys for each stage, nest the configuration in a property with the name of the relevant stage.
-
-```yaml
-custom:
-  apiKeys:
-    dev:
-      - name: name1
-      - name: name2
-    prod:
-      - name: name1
-    other-stage-name:
-      - name: name5
 ```
 
 ### Specifying encrypted key values
@@ -126,6 +64,65 @@ custom:
 
 When an object with `encrypted` and `kmsKeyRegion` key detected in `value`, the encrypted value will be decrypted using a proper KMS key from the region specified in `kmsKeyRegion`. In the case of missing `kmsKeyRegion`, the region from command line will be used.
 
+### Specifying usage plan
+
+```yaml
+custom:
+  apiKeys:
+    - name: KeyWithFullUsagePlanDetail
+      usagePlan:
+        name: "name-of-first-usage-plan" (required if usagePlan is specified. rest of the fields are optional)
+        description: "Description of first plan"
+        quota:
+          limit: 1000
+          period: DAY
+        throttle:
+          burstLimit: 100
+          rateLimit: 20
+    - name: KeyWithOnlyUsagePlanName
+      usagePlan:
+        name: "name-of-first-usage-plan"
+    - name: AKeyWithNoUsagePlan
+    - name: KeyWithNoUsagePlanButValue
+      value: SomeKeyValue
+
+provider: // this is optional - plugin will use this if usage plan options are not provided in custom section as above
+  usagePlan:
+    name: "default-usage-plan"
+    description: "Used for serverless as the default for the process or for custom apiKeys above if no usagePlan is provided"
+    quota:
+      limit: 5000
+      period: DAY
+    throttle:
+      burstLimit: 100
+      rateLimit: 50
+```
+
+If the usage plan needs to be created, first it will look for a usagePlan property that is an object with a name property. If it does not find that it will use the usagePlan attributes defined in the `provider` section, if defined.
+
+NOTE: If not specified in the configuration, an individual usagePlan will be created for each key listed. For example, `AKeyWithNoUsagePlan` will have an individual usage plan named `AKeyWithNoUsagePlan-usage-plan` with no restrictions.
+
+### Stage-specific configuration
+
+To specify different API keys for each stage, nest the configuration in a property with the name of the relevant stage.
+Note - When specifying the keys for each stage, you can use any of the above configuration like providing value/encrypted value and usage plan.
+
+```yaml
+custom:
+  apiKeys:
+    dev:
+      - name: name1
+      - name: name2
+    prod:
+      - name: name1
+    other-stage-name:
+      - name: name5
+```
+
+For more info on how to get started with Serverless Framework click [here](https://serverless.com/framework/docs/getting-started/).
+
+
 ### Revisions:
 
-3.3.0 - Added UsagePlan settings
+* 3.3.0 - Added UsagePlan settings
+* 3.3.1 - Added unit tests, examples and travis-ci

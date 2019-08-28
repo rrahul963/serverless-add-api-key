@@ -6,7 +6,7 @@
   "scripts": {
     "test-unit": "mocha test/unittest",
     "coverage": "nyc --reporter=html npm run test-unit",
-    "prepush": "npm run test-unit"
+    "pre-push": "npm run test-unit"
   },
   "repository": {
     "type": "git",

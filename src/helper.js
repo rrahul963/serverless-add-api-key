@@ -238,6 +238,24 @@ const decryptApiKeyValue = async (encryptedApiKeyValue, kmsKeyRegion, kms, cli) 
 };
 
 /**
+ *
+ * @param {string} id usage plan id
+ * @param {Object} ag Api Gateway object
+ */
+const deleteUsagePlan = async function deleteUsagePlan(id, ag) {
+  await ag.deleteUsagePlan({ usagePlanId:id }).promise();
+};
+
+/**
+ *
+ * @param {string} id Api key id
+ * @param {Object} ag Api Gateway object
+ */
+const deleteApiKey = async function deleteApiKey(id, ag) {
+  await ag.deleteApiKey({ apiKey: id }).promise();
+};
+
+/**
  * Main function that adds api key.
  * @param {Object} serverless Serverless object
  */
@@ -266,13 +284,20 @@ const addApiKey = async (serverless, options) => {
     serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`No ApiKey names specified for stage ${stage} so skipping creation`)}`);
   }
 
+  let planName;
   const defaultUsagePlan = (serverless.service.provider && serverless.service.provider.usagePlan) || {};
 
   for (let apiKey of apiKeys) {
     let apiKeyValue = null;
     const apiKeyName = apiKey.name;
     // if we have a defined usagePlan object, us it's .name. If it's a string, use that. Otherwise a default.
-    const planName = (apiKey.usagePlan && apiKey.usagePlan.name) ? apiKey.usagePlan.name : `${apiKeyName}-usage-plan`;
+    if (apiKey.usagePlan && apiKey.usagePlan.name) {
+      planName = apiKey.usagePlan.name;
+    } else if (Object.keys(defaultUsagePlan)) {
+      planName = defaultUsagePlan.name;
+    } else {
+      planName = `${apiKeyName}-usage-plan`
+    }
     // when creating a plan, use the one defined if set, otherwise the default or blank
     const usagePlanTemplate = (apiKey.usagePlan && (apiKey.usagePlan.quota || apiKey.throttle)) ? apiKey.usagePlan : defaultUsagePlan;
 
@@ -337,6 +362,59 @@ const addApiKey = async (serverless, options) => {
   results.forEach(result => serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`${result.key} - ${result.value}`)}`));
 };
 
+/**
+ * Main function to remove api keys
+ * @param {Object} serverless Serverless object
+ * @param {Object} options Serverless options
+ */
+const removeApiKey = async (serverless) => {
+  const provider = serverless.getProvider('aws');
+  const awsCredentials = provider.getCredentials();
+  const region = provider.getRegion();
+  const stage = provider.getStage();
+  const apiKeysForStages = serverless.service.custom.apiKeys || [];
+  const apiKeys = Array.isArray(apiKeysForStages) ? apiKeysForStages : apiKeysForStages[stage];
+  const ag = new AWS.APIGateway({
+    credentials: awsCredentials.credentials,
+    region
+  });
+
+  let planName;
+  const defaultUsagePlan = (serverless.service.provider && serverless.service.provider.usagePlan) || {};
+
+  for (let apiKey of apiKeys) {
+    const apiKeyName = apiKey.name;
+
+    // if we have a defined usagePlan object, us it's .name. If it's a string, use that. Otherwise a default.
+    if (apiKey.usagePlan && apiKey.usagePlan.name) {
+      planName = apiKey.usagePlan.name;
+    } else if (Object.keys(defaultUsagePlan)) {
+      planName = defaultUsagePlan.name;
+    } else {
+      planName = `${apiKeyName}-usage-plan`
+    }
+
+    const plan = await getUsagePlan(planName, ag, serverless.cli);
+    if (!plan) {
+      serverless.cli.consoleLog(`RemoveApiKey: ${chalk.red(`${planName} not found.`)}`);
+      return;
+    }
+    if (plan.apiStages.length > 0) {
+      serverless.cli.consoleLog(`RemoveApiKey: ${chalk.red(`${planName} has apiStages associated with it. Skipping deletion.`)}`);
+      return;
+    }
+    await deleteUsagePlan(plan.id, ag, serverless.cli);
+    serverless.cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Usage Plan ${planName} deleted successfully`)}`);
+    const key = await getApiKey(apiKeyName, ag);
+    if (!key) {
+      serverless.cli.consoleLog(`RemoveApiKey: ${chalk.red(`${apiKeyName} not found.`)}`);
+      return;
+    }
+    await deleteApiKey(key.id, ag);
+    serverless.cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Api Key ${apiKeyName} deleted successfully`)}`);
+  }
+};
+
 module.exports = {
   addApiKey,
   associateRestApiWithUsagePlan,
@@ -346,5 +424,6 @@ module.exports = {
   decryptApiKeyValue,
   getApiKey,
   getUsagePlan,
-  getUsagePlanKeys
+  getUsagePlanKeys,
+  removeApiKey
 };

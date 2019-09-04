@@ -62,3 +62,6 @@ typings/
 
 # lock file
 *-lock.json
+
+#vs code folder
+.vscode

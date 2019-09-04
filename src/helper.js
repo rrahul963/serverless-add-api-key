@@ -293,7 +293,7 @@ const addApiKey = async (serverless, options) => {
     // if we have a defined usagePlan object, us it's .name. If it's a string, use that. Otherwise a default.
     if (apiKey.usagePlan && apiKey.usagePlan.name) {
       planName = apiKey.usagePlan.name;
-    } else if (Object.keys(defaultUsagePlan)) {
+    } else if (Object.keys(defaultUsagePlan).length > 0) {
       planName = defaultUsagePlan.name;
     } else {
       planName = `${apiKeyName}-usage-plan`

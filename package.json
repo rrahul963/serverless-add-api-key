@@ -1,6 +1,6 @@
 {
   "name": "serverless-add-api-key",
-  "version": "3.3.1",
+  "version": "4.0.0",
   "description": "serverless plugin to create a api key and usage pattern (if they don't already exist) and associates them to the Rest Api",
   "main": "src/index.js",
   "scripts": {
@@ -33,6 +33,7 @@
     "chalk": "^2.4.1"
   },
   "devDependencies": {
+    "coveralls": "^3.0.6",
     "eslint": "^6.2.2",
     "mocha": "^6.1.4",
     "nyc": "^14.1.1",

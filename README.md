@@ -88,7 +88,7 @@ custom:
 
 provider: // this is optional - plugin will use this if usage plan options are not provided in custom section as above
   usagePlan:
-    name: "default-usage-plan"
+    name: "default-usage-plan-name"
     description: "Used for serverless as the default for the process or for custom apiKeys above if no usagePlan is provided"
     quota:
       limit: 5000
@@ -100,7 +100,10 @@ provider: // this is optional - plugin will use this if usage plan options are n
 
 If the usage plan needs to be created, first it will look for a usagePlan property that is an object with a name property. If it does not find that it will use the usagePlan attributes defined in the `provider` section, if defined.
 
-NOTE: If not specified in the configuration, an individual usagePlan will be created for each key listed. For example, `AKeyWithNoUsagePlan` will have an individual usage plan named `AKeyWithNoUsagePlan-usage-plan` with no restrictions.
+**NOTE**:
+- If not specified in the configuration, an individual usagePlan will be created for each key listed.
+For example, `AKeyWithNoUsagePlan` will have an individual usage plan named `AKeyWithNoUsagePlan-usage-plan` with no restrictions.
+- When UsagePlan configuration is provided under `provider` section, serverless automatically creates a usage plan named `<service-name>-plan`, but this plugin is not using that usage plan.
 
 ### Stage-specific configuration
 
@@ -119,6 +122,10 @@ custom:
       - name: name5
 ```
 
+### Remove Api Key(s) and Usage plan(s)
+Run severless remove command to remove the created api key and usage plan.
+If the Usage plan is associated with more than one api then the plan and key will be deleted only when the last service is removed.
+
 For more info on how to get started with Serverless Framework click [here](https://serverless.com/framework/docs/getting-started/).
 
 
@@ -126,3 +133,7 @@ For more info on how to get started with Serverless Framework click [here](https
 
 * 3.3.0 - Added UsagePlan settings
 * 3.3.1 - Added unit tests, examples and travis-ci
+
+* 4.0.0
+  - Added Remove hook
+  - Added option to read the usage plan name from the provider section.

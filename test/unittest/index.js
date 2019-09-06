@@ -215,6 +215,36 @@ describe('test addApiKey function', () => {
       done(err);
     })
   });
+
+  it ('addkey when encrypted value is provided', done => {
+    serverless.service.provider.usagePlan = undefined;
+    serverless.service.custom.apiKeys = [
+      {
+        name: 'some-key',
+        value: {
+          encrypted: 'some-encrypted-value'
+        }
+      }
+    ];
+    plugin.addApiKey(serverless, {})
+    .then(() => {
+      sandbox.assert.calledOnce(plugin.decryptApiKeyValue);
+      sandbox.assert.calledWith(plugin.decryptApiKeyValue, 'some-encrypted-value');
+      sandbox.assert.calledOnce(plugin.getApiKey);
+      sandbox.assert.calledWith(plugin.getApiKey, 'some-key');
+      sandbox.assert.calledOnce(plugin.getUsagePlan);
+      sandbox.assert.calledWith(plugin.getUsagePlan, 'some-key-usage-plan');
+      sandbox.assert.calledOnce(plugin.createKey);
+      sandbox.assert.calledOnce(plugin.createUsagePlan);
+      sandbox.assert.calledOnce(plugin.createUsagePlanKey);
+      sandbox.assert.calledOnce(plugin.associateRestApiWithUsagePlan);
+      done();
+    })
+    .catch(err => {
+      console.log(err);
+      done(err);
+    })
+  });
 });
 
 describe('test getApiKey function', () => {
@@ -1028,6 +1058,86 @@ describe('test removeApiKey function', () => {
         done(err);
       });
   })
+
+  it ('should get the usage plan name from provider section', done => {
+    serverless.service.provider.usagePlan = {
+      name: 'provider-usage-plan'
+    };
+    serverless.service.custom.apiKeys = {
+      dev: [
+        {
+          name: 'some-dev-api-key'
+        }
+      ]
+    }
+    plugin.getUsagePlan.restore();
+    sandbox.stub(plugin, 'getUsagePlan').returns(Promise.resolve(
+      {
+        id: 'some-plan-id',
+        apiStages: []
+      }
+    ));
+    plugin.getApiKey.restore();
+    sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve(
+      {
+        id: 'some-api-id'
+      }
+    ));
+    plugin.removeApiKey(serverless)
+      .then(() => {
+        sandbox.assert.calledOnce(plugin.getUsagePlan);
+        sandbox.assert.calledWith(plugin.getUsagePlan, 'provider-usage-plan');
+        sandbox.assert.calledOnce(plugin.deleteUsagePlan);
+        sandbox.assert.calledWith(plugin.deleteUsagePlan, 'some-plan-id');
+        sandbox.assert.calledOnce(plugin.getApiKey);
+        sandbox.assert.calledWith(plugin.getApiKey, 'some-dev-api-key');
+        sandbox.assert.calledOnce(plugin.deleteApiKey);
+        sandbox.assert.calledWith(plugin.deleteApiKey, 'some-api-id');
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      });
+  });
+
+  it ('should exit of api key not found', done => {
+    serverless.service.provider.usagePlan = undefined;
+    serverless.service.custom.apiKeys = {
+      dev: [
+        {
+          name: 'some-dev-api-key',
+          usagePlan: {
+            name: 'key-usage-plan'
+          }
+        }
+      ]
+    }
+    plugin.getUsagePlan.restore();
+    sandbox.stub(plugin, 'getUsagePlan').returns(Promise.resolve(
+      {
+        id: 'some-plan-id',
+        apiStages: []
+      }
+    ));
+    plugin.getApiKey.restore();
+    sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve());
+    plugin.removeApiKey(serverless)
+      .then(() => {
+        sandbox.assert.calledOnce(plugin.getUsagePlan);
+        sandbox.assert.calledWith(plugin.getUsagePlan, 'key-usage-plan');
+        sandbox.assert.calledOnce(plugin.deleteUsagePlan);
+        sandbox.assert.calledWith(plugin.deleteUsagePlan, 'some-plan-id');
+        sandbox.assert.calledOnce(plugin.getApiKey);
+        sandbox.assert.calledWith(plugin.getApiKey, 'some-dev-api-key');
+        sandbox.assert.notCalled(plugin.deleteApiKey);
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      });
+  });
 
 });
 

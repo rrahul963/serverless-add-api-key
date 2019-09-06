@@ -38,6 +38,25 @@ const serverless = {
 };
 
 describe('test addApiKey function', () => {
+  const serverless = {
+    getProvider: () => {
+      return provider
+    },
+    service: {
+      custom: {
+        apiKeys: []
+      },
+      provider: {},
+      getServiceName: () => {
+        return 'service-name'
+      }
+    },
+    cli: {
+      consoleLog: (str) => {
+        console.log(str);
+      }
+    }
+  };
   const sandbox = sinon.createSandbox();
   beforeEach(() => {
     sandbox.stub(plugin, 'decryptApiKeyValue').returns(Promise.resolve());
@@ -122,6 +141,69 @@ describe('test addApiKey function', () => {
       sandbox.assert.notCalled(plugin.decryptApiKeyValue);
       sandbox.assert.calledOnce(plugin.getApiKey);
       sandbox.assert.calledOnce(plugin.getUsagePlan);
+      sandbox.assert.calledOnce(plugin.createKey);
+      sandbox.assert.calledOnce(plugin.createUsagePlan);
+      sandbox.assert.calledOnce(plugin.createUsagePlanKey);
+      sandbox.assert.calledOnce(plugin.associateRestApiWithUsagePlan);
+      done();
+    })
+    .catch(err => {
+      console.log(err);
+      done(err);
+    })
+  });
+
+  it ('addkey when usage plan is defined at provider level', done => {
+    serverless.service.provider.usagePlan = {
+      name: 'provider-usage-plan'
+    };
+    serverless.service.custom.apiKeys = {
+      dev: [
+        {
+          name: 'some-dev-api-key'
+        }
+      ]
+    }
+    plugin.addApiKey(serverless, {})
+    .then(() => {
+      sandbox.assert.notCalled(plugin.decryptApiKeyValue);
+      sandbox.assert.calledOnce(plugin.getApiKey);
+      sandbox.assert.calledWith(plugin.getApiKey, 'some-dev-api-key');
+      sandbox.assert.calledOnce(plugin.getUsagePlan);
+      sandbox.assert.calledWith(plugin.getUsagePlan, 'provider-usage-plan');
+      sandbox.assert.calledOnce(plugin.createKey);
+      sandbox.assert.calledOnce(plugin.createUsagePlan);
+      sandbox.assert.calledOnce(plugin.createUsagePlanKey);
+      sandbox.assert.calledOnce(plugin.associateRestApiWithUsagePlan);
+      done();
+    })
+    .catch(err => {
+      console.log(err);
+      done(err);
+    })
+  });
+
+  it ('addkey when usage plan is defined at api key level', done => {
+    serverless.service.provider.usagePlan = {
+      name: 'provider-usage-plan'
+    };
+    serverless.service.custom.apiKeys = {
+      dev: [
+        {
+          name: 'some-dev-api-key',
+          usagePlan: {
+            name: 'some-api-usage-plan'
+          }
+        }
+      ]
+    }
+    plugin.addApiKey(serverless, {})
+    .then(() => {
+      sandbox.assert.notCalled(plugin.decryptApiKeyValue);
+      sandbox.assert.calledOnce(plugin.getApiKey);
+      sandbox.assert.calledWith(plugin.getApiKey, 'some-dev-api-key');
+      sandbox.assert.calledOnce(plugin.getUsagePlan);
+      sandbox.assert.calledWith(plugin.getUsagePlan, 'some-api-usage-plan');
       sandbox.assert.calledOnce(plugin.createKey);
       sandbox.assert.calledOnce(plugin.createUsagePlan);
       sandbox.assert.calledOnce(plugin.createUsagePlanKey);
@@ -823,6 +905,25 @@ describe('test decryptApiKeyValue function', () => {
 });
 
 describe('test removeApiKey function', () => {
+  const serverless = {
+    getProvider: () => {
+      return provider
+    },
+    service: {
+      custom: {
+        apiKeys: []
+      },
+      provider: {},
+      getServiceName: () => {
+        return 'service-name'
+      }
+    },
+    cli: {
+      consoleLog: (str) => {
+        console.log(str);
+      }
+    }
+  };
   const sandbox = sinon.createSandbox();
   beforeEach(() => {
     sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve());
@@ -968,7 +1069,7 @@ describe('test deleteUsagePlan function', () => {
     });
     it ('should return id and value', done => {
       plugin.deleteUsagePlan('test-plugins-us-west-2-key', agMock, serverless.cli)
-      .then(resp => {
+      .then(() => {
         done();
       })
       .catch(err => {
@@ -1017,7 +1118,7 @@ describe('test deleteApiKey function', () => {
     });
     it ('should return id and value', done => {
       plugin.deleteApiKey('test-plugins-us-west-2-key', agMock, serverless.cli)
-      .then(resp => {
+      .then(() => {
         done();
       })
       .catch(err => {

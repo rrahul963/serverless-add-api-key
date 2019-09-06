@@ -246,7 +246,7 @@ const deleteUsagePlan = async function deleteUsagePlan(id, ag, cli) {
   try {
     await ag.deleteUsagePlan({ usagePlanId:id }).promise();
   } catch (error) {
-    cli.consoleLog(`AddApiKey: ${chalk.red(`Failed to delete usage plan ${id}}`)}.`);
+    cli.consoleLog(`RemoveApiKey: ${chalk.red(`Failed to delete usage plan ${id}}`)}.`);
     throw error;
   }
 };
@@ -260,7 +260,7 @@ const deleteApiKey = async function deleteApiKey(id, ag, cli) {
   try {
     await ag.deleteApiKey({ apiKey: id }).promise();
   } catch (error) {
-    cli.consoleLog(`AddApiKey: ${chalk.red(`Failed to delete api key ${id}}`)}.`);
+    cli.consoleLog(`RemoveApiKey: ${chalk.red(`Failed to delete api key ${id}}`)}.`);
     throw error;
   }
 };

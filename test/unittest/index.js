@@ -821,3 +821,111 @@ describe('test decryptApiKeyValue function', () => {
     });
   });
 });
+
+describe('test removeApiKey function', () => {
+  const sandbox = sinon.createSandbox();
+  beforeEach(() => {
+    sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve());
+    sandbox.stub(plugin, 'getUsagePlan').returns(Promise.resolve());
+    sandbox.stub(plugin, 'deleteUsagePlan').returns(Promise.resolve());
+    sandbox.stub(plugin, 'deleteApiKey').returns(Promise.resolve());
+  });
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it ('should delete api if usage plan not found', done => {
+    serverless.service.custom.apiKeys = [
+      {
+        name: 'test-api-key'
+      }
+    ];
+    plugin.getApiKey.restore();
+    sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve(
+      {
+        id: 'some-key-id'
+      }
+    ));
+    plugin.removeApiKey(serverless)
+      .then(() => {
+        sandbox.assert.calledWith(plugin.getUsagePlan, 'test-api-key-usage-plan');
+        sandbox.assert.notCalled(plugin.deleteUsagePlan);
+        sandbox.assert.calledOnce(plugin.getApiKey);
+        sandbox.assert.calledWith(plugin.getApiKey, 'test-api-key');
+        sandbox.assert.calledOnce(plugin.deleteApiKey);
+        sandbox.assert.calledWith(plugin.deleteApiKey, 'some-key-id');
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      });
+  })
+
+  it ('should return if usage plan is associated with multiple api stages', done => {
+    serverless.service.custom.apiKeys = [
+      {
+        name: 'test-api-key'
+      }
+    ];
+    plugin.getUsagePlan.restore();
+    sandbox.stub(plugin, 'getUsagePlan').returns(Promise.resolve(
+      {
+        id: 'some-key-id',
+        apiStages: [
+          'stage1',
+          'stage2'
+        ]
+      }
+    ));
+    plugin.removeApiKey(serverless)
+      .then(() => {sandbox.assert.calledWith(plugin.getUsagePlan, 'test-api-key-usage-plan');
+        sandbox.assert.notCalled(plugin.deleteUsagePlan);
+        sandbox.assert.notCalled(plugin.getApiKey);
+        sandbox.assert.notCalled(plugin.deleteApiKey);
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      });
+  })
+
+  it ('should delete the usage plan and api key successfully', done => {
+    serverless.service.custom.apiKeys = [
+      {
+        name: 'test-api-key'
+      }
+    ];
+    plugin.getUsagePlan.restore();
+    sandbox.stub(plugin, 'getUsagePlan').returns(Promise.resolve(
+      {
+        id: 'some-plan-id',
+        apiStages: []
+      }
+    ));
+    plugin.getApiKey.restore();
+    sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve(
+      {
+        id: 'some-api-id'
+      }
+    ));
+    plugin.removeApiKey(serverless)
+      .then(() => {
+        sandbox.assert.calledOnce(plugin.getUsagePlan);
+        sandbox.assert.calledWith(plugin.getUsagePlan, 'test-api-key-usage-plan');
+        sandbox.assert.calledOnce(plugin.deleteUsagePlan);
+        sandbox.assert.calledWith(plugin.deleteUsagePlan, 'some-plan-id');
+        sandbox.assert.calledOnce(plugin.getApiKey);
+        sandbox.assert.calledWith(plugin.getApiKey, 'test-api-key');
+        sandbox.assert.calledOnce(plugin.deleteApiKey);
+        sandbox.assert.calledWith(plugin.deleteApiKey, 'some-api-id');
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      });
+  })
+
+});

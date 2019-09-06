@@ -238,6 +238,34 @@ const decryptApiKeyValue = async (encryptedApiKeyValue, kmsKeyRegion, kms, cli) 
 };
 
 /**
+ *
+ * @param {string} id usage plan id
+ * @param {Object} ag Api Gateway object
+ */
+const deleteUsagePlan = async function deleteUsagePlan(id, ag, cli) {
+  try {
+    await ag.deleteUsagePlan({ usagePlanId:id }).promise();
+  } catch (error) {
+    cli.consoleLog(`RemoveApiKey: ${chalk.red(`Failed to delete usage plan ${id}}`)}.`);
+    throw error;
+  }
+};
+
+/**
+ *
+ * @param {string} id Api key id
+ * @param {Object} ag Api Gateway object
+ */
+const deleteApiKey = async function deleteApiKey(id, ag, cli) {
+  try {
+    await ag.deleteApiKey({ apiKey: id }).promise();
+  } catch (error) {
+    cli.consoleLog(`RemoveApiKey: ${chalk.red(`Failed to delete api key ${id}}`)}.`);
+    throw error;
+  }
+};
+
+/**
  * Main function that adds api key.
  * @param {Object} serverless Serverless object
  */
@@ -266,13 +294,20 @@ const addApiKey = async (serverless, options) => {
     serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`No ApiKey names specified for stage ${stage} so skipping creation`)}`);
   }
 
+  let planName;
   const defaultUsagePlan = (serverless.service.provider && serverless.service.provider.usagePlan) || {};
 
   for (let apiKey of apiKeys) {
     let apiKeyValue = null;
     const apiKeyName = apiKey.name;
     // if we have a defined usagePlan object, us it's .name. If it's a string, use that. Otherwise a default.
-    const planName = (apiKey.usagePlan && apiKey.usagePlan.name) ? apiKey.usagePlan.name : `${apiKeyName}-usage-plan`;
+    if (apiKey.usagePlan && apiKey.usagePlan.name) {
+      planName = apiKey.usagePlan.name;
+    } else if (defaultUsagePlan.name) {
+      planName = defaultUsagePlan.name;
+    } else {
+      planName = `${apiKeyName}-usage-plan`
+    }
     // when creating a plan, use the one defined if set, otherwise the default or blank
     const usagePlanTemplate = (apiKey.usagePlan && (apiKey.usagePlan.quota || apiKey.throttle)) ? apiKey.usagePlan : defaultUsagePlan;
 
@@ -312,7 +347,7 @@ const addApiKey = async (serverless, options) => {
       }
 
       // if usage plan doesn't exist create one and associate the created api key with it.
-      // if usage plan already exists then associate the key with it, if its not already associated.
+      // if usage plan already exists then associate the key with it, if it's not already associated.
       if (!usagePlan) {
         usagePlanId = await module.exports.createUsagePlan(
           planName, ag, serverless.cli, usagePlanTemplate
@@ -337,6 +372,60 @@ const addApiKey = async (serverless, options) => {
   results.forEach(result => serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`${result.key} - ${result.value}`)}`));
 };
 
+/**
+ * Main function to remove api keys
+ * @param {Object} serverless Serverless object
+ * @param {Object} options Serverless options
+ */
+const removeApiKey = async (serverless) => {
+  const provider = serverless.getProvider('aws');
+  const awsCredentials = provider.getCredentials();
+  const region = provider.getRegion();
+  const stage = provider.getStage();
+  const apiKeysForStages = serverless.service.custom.apiKeys || [];
+  const apiKeys = Array.isArray(apiKeysForStages) ? apiKeysForStages : apiKeysForStages[stage];
+  const ag = new AWS.APIGateway({
+    credentials: awsCredentials.credentials,
+    region
+  });
+
+  let planName;
+  const defaultUsagePlan = (serverless.service.provider && serverless.service.provider.usagePlan) || {};
+
+  for (let apiKey of apiKeys) {
+    const apiKeyName = apiKey.name;
+
+    if (apiKey.usagePlan && apiKey.usagePlan.name) {
+      planName = apiKey.usagePlan.name;
+    } else if (defaultUsagePlan.name) {
+      planName = defaultUsagePlan.name;
+    } else {
+      planName = `${apiKeyName}-usage-plan`
+    }
+
+    const plan = await module.exports.getUsagePlan(planName, ag, serverless.cli);
+    if (!plan) {
+      serverless.cli.consoleLog(`RemoveApiKey: ${chalk.red(`${planName} not found. Checking and deleting Api key.`)}`);
+    } else {
+      if (plan.apiStages.length > 0) {
+        serverless.cli.consoleLog(`RemoveApiKey: ${chalk.red(`${planName} has apiStages associated with it. Skipping deletion.`)}`);
+        continue;
+      }
+      serverless.cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Deleting Usage plan ${planName} - ${plan.id}`)}`);
+      await module.exports.deleteUsagePlan(plan.id, ag, serverless.cli);
+      serverless.cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Usage Plan ${planName} deleted successfully`)}`);
+    }
+    const key = await module.exports.getApiKey(apiKeyName, ag);
+    if (!key) {
+      serverless.cli.consoleLog(`RemoveApiKey: ${chalk.red(`${apiKeyName} not found.`)}`);
+      continue;
+    }
+    serverless.cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Deleting Api Key ${apiKeyName} - ${key.id}`)}`);
+    await module.exports.deleteApiKey(key.id, ag, serverless.cli);
+    serverless.cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Api Key ${apiKeyName} deleted successfully`)}`);
+  }
+};
+
 module.exports = {
   addApiKey,
   associateRestApiWithUsagePlan,
@@ -344,7 +433,10 @@ module.exports = {
   createUsagePlan,
   createUsagePlanKey,
   decryptApiKeyValue,
+  deleteApiKey,
+  deleteUsagePlan,
   getApiKey,
   getUsagePlan,
-  getUsagePlanKeys
+  getUsagePlanKeys,
+  removeApiKey
 };

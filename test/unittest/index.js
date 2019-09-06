@@ -929,3 +929,101 @@ describe('test removeApiKey function', () => {
   })
 
 });
+
+describe('test deleteUsagePlan function', () => {
+  describe('failure', () => {
+    let agMock;
+    before(() => {
+      agMock = new AWS.APIGateway();
+      const agMockPromise = {
+        promise: sinon.fake.rejects(new Error('failed'))
+      };
+      agMock = {
+        deleteUsagePlan: () => { return agMockPromise }
+      };
+    });
+    it ('should throw error', done => {
+      plugin.deleteUsagePlan('test-plugins-us-west-2-key', agMock, serverless.cli)
+      .then(resp => {
+        console.log(resp);
+        done('should not come here');
+      })
+      .catch(err => {
+        err.message.should.eql('failed');
+        done();
+      })
+    });
+  });
+
+  describe('success', () => {
+    let agMock;
+    before(() => {
+      agMock = new AWS.APIGateway();
+      const agMockPromise = {
+        promise: sinon.fake.resolves()
+      };
+      agMock = {
+        deleteUsagePlan: () => { return agMockPromise }
+      };
+    });
+    it ('should return id and value', done => {
+      plugin.deleteUsagePlan('test-plugins-us-west-2-key', agMock, serverless.cli)
+      .then(resp => {
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      })
+    });
+  });
+});
+
+describe('test deleteApiKey function', () => {
+  describe('failure', () => {
+    let agMock;
+    before(() => {
+      agMock = new AWS.APIGateway();
+      const agMockPromise = {
+        promise: sinon.fake.rejects(new Error('failed'))
+      };
+      agMock = {
+        deleteApiKey: () => { return agMockPromise }
+      };
+    });
+    it ('should throw error', done => {
+      plugin.deleteApiKey('test-plugins-us-west-2-key', agMock, serverless.cli)
+      .then(resp => {
+        console.log(resp);
+        done('should not come here');
+      })
+      .catch(err => {
+        err.message.should.eql('failed');
+        done();
+      })
+    });
+  });
+
+  describe('success', () => {
+    let agMock;
+    before(() => {
+      agMock = new AWS.APIGateway();
+      const agMockPromise = {
+        promise: sinon.fake.resolves()
+      };
+      agMock = {
+        deleteApiKey: () => { return agMockPromise }
+      };
+    });
+    it ('should return id and value', done => {
+      plugin.deleteApiKey('test-plugins-us-west-2-key', agMock, serverless.cli)
+      .then(resp => {
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      })
+    });
+  });
+});

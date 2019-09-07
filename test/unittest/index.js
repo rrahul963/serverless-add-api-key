@@ -38,27 +38,10 @@ const serverless = {
 };
 
 describe('test addApiKey function', () => {
-  const serverless = {
-    getProvider: () => {
-      return provider
-    },
-    service: {
-      custom: {
-        apiKeys: []
-      },
-      provider: {},
-      getServiceName: () => {
-        return 'service-name'
-      }
-    },
-    cli: {
-      consoleLog: (str) => {
-        console.log(str);
-      }
-    }
-  };
   const sandbox = sinon.createSandbox();
   beforeEach(() => {
+    serverless.service.provider.usagePlan = undefined;
+    serverless.service.custom.apiKeys = []
     sandbox.stub(plugin, 'decryptApiKeyValue').returns(Promise.resolve());
     sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve());
     sandbox.stub(plugin, 'getUsagePlan').returns(Promise.resolve());
@@ -935,27 +918,10 @@ describe('test decryptApiKeyValue function', () => {
 });
 
 describe('test removeApiKey function', () => {
-  const serverless = {
-    getProvider: () => {
-      return provider
-    },
-    service: {
-      custom: {
-        apiKeys: []
-      },
-      provider: {},
-      getServiceName: () => {
-        return 'service-name'
-      }
-    },
-    cli: {
-      consoleLog: (str) => {
-        console.log(str);
-      }
-    }
-  };
   const sandbox = sinon.createSandbox();
   beforeEach(() => {
+    serverless.service.provider.usagePlan = undefined;
+    serverless.service.custom.apiKeys = []
     sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve());
     sandbox.stub(plugin, 'getUsagePlan').returns(Promise.resolve());
     sandbox.stub(plugin, 'deleteUsagePlan').returns(Promise.resolve());

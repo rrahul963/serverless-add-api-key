@@ -40,6 +40,8 @@ const serverless = {
 describe('test addApiKey function', () => {
   const sandbox = sinon.createSandbox();
   beforeEach(() => {
+    serverless.service.provider.usagePlan = undefined;
+    serverless.service.custom.apiKeys = []
     sandbox.stub(plugin, 'decryptApiKeyValue').returns(Promise.resolve());
     sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve());
     sandbox.stub(plugin, 'getUsagePlan').returns(Promise.resolve());
@@ -122,6 +124,99 @@ describe('test addApiKey function', () => {
       sandbox.assert.notCalled(plugin.decryptApiKeyValue);
       sandbox.assert.calledOnce(plugin.getApiKey);
       sandbox.assert.calledOnce(plugin.getUsagePlan);
+      sandbox.assert.calledOnce(plugin.createKey);
+      sandbox.assert.calledOnce(plugin.createUsagePlan);
+      sandbox.assert.calledOnce(plugin.createUsagePlanKey);
+      sandbox.assert.calledOnce(plugin.associateRestApiWithUsagePlan);
+      done();
+    })
+    .catch(err => {
+      console.log(err);
+      done(err);
+    })
+  });
+
+  it ('addkey when usage plan is defined at provider level', done => {
+    serverless.service.provider.usagePlan = {
+      name: 'provider-usage-plan'
+    };
+    serverless.service.custom.apiKeys = {
+      dev: [
+        {
+          name: 'some-dev-api-key'
+        }
+      ]
+    }
+    plugin.addApiKey(serverless, {})
+    .then(() => {
+      sandbox.assert.notCalled(plugin.decryptApiKeyValue);
+      sandbox.assert.calledOnce(plugin.getApiKey);
+      sandbox.assert.calledWith(plugin.getApiKey, 'some-dev-api-key');
+      sandbox.assert.calledOnce(plugin.getUsagePlan);
+      sandbox.assert.calledWith(plugin.getUsagePlan, 'provider-usage-plan');
+      sandbox.assert.calledOnce(plugin.createKey);
+      sandbox.assert.calledOnce(plugin.createUsagePlan);
+      sandbox.assert.calledOnce(plugin.createUsagePlanKey);
+      sandbox.assert.calledOnce(plugin.associateRestApiWithUsagePlan);
+      done();
+    })
+    .catch(err => {
+      console.log(err);
+      done(err);
+    })
+  });
+
+  it ('addkey when usage plan is defined at api key level', done => {
+    serverless.service.provider.usagePlan = {
+      name: 'provider-usage-plan'
+    };
+    serverless.service.custom.apiKeys = {
+      dev: [
+        {
+          name: 'some-dev-api-key',
+          usagePlan: {
+            name: 'some-api-usage-plan'
+          }
+        }
+      ]
+    }
+    plugin.addApiKey(serverless, {})
+    .then(() => {
+      sandbox.assert.notCalled(plugin.decryptApiKeyValue);
+      sandbox.assert.calledOnce(plugin.getApiKey);
+      sandbox.assert.calledWith(plugin.getApiKey, 'some-dev-api-key');
+      sandbox.assert.calledOnce(plugin.getUsagePlan);
+      sandbox.assert.calledWith(plugin.getUsagePlan, 'some-api-usage-plan');
+      sandbox.assert.calledOnce(plugin.createKey);
+      sandbox.assert.calledOnce(plugin.createUsagePlan);
+      sandbox.assert.calledOnce(plugin.createUsagePlanKey);
+      sandbox.assert.calledOnce(plugin.associateRestApiWithUsagePlan);
+      done();
+    })
+    .catch(err => {
+      console.log(err);
+      done(err);
+    })
+  });
+
+  it ('addkey when encrypted value is provided', done => {
+    serverless.service.provider.usagePlan = undefined;
+    serverless.service.custom.apiKeys = [
+      {
+        name: 'some-key',
+        value: {
+          encrypted: 'some-encrypted-value'
+        }
+      }
+    ];
+    plugin.addApiKey(serverless, {})
+    .then(() => {
+      sandbox.assert.calledOnce(plugin.decryptApiKeyValue);
+      sandbox.assert.calledWith(plugin.decryptApiKeyValue, 'some-encrypted-value');
+      sandbox.assert.calledOnce(plugin.getApiKey);
+      sandbox.assert.calledWith(plugin.getApiKey, 'some-key');
+      sandbox.assert.calledOnce(plugin.getUsagePlan);
+      sandbox.assert.calledWith(plugin.getUsagePlan, 'some-key-usage-plan');
       sandbox.assert.calledOnce(plugin.createKey);
       sandbox.assert.calledOnce(plugin.createUsagePlan);
       sandbox.assert.calledOnce(plugin.createUsagePlanKey);
@@ -825,6 +920,8 @@ describe('test decryptApiKeyValue function', () => {
 describe('test removeApiKey function', () => {
   const sandbox = sinon.createSandbox();
   beforeEach(() => {
+    serverless.service.provider.usagePlan = undefined;
+    serverless.service.custom.apiKeys = []
     sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve());
     sandbox.stub(plugin, 'getUsagePlan').returns(Promise.resolve());
     sandbox.stub(plugin, 'deleteUsagePlan').returns(Promise.resolve());
@@ -928,4 +1025,182 @@ describe('test removeApiKey function', () => {
       });
   })
 
+  it ('should get the usage plan name from provider section', done => {
+    serverless.service.provider.usagePlan = {
+      name: 'provider-usage-plan'
+    };
+    serverless.service.custom.apiKeys = {
+      dev: [
+        {
+          name: 'some-dev-api-key'
+        }
+      ]
+    }
+    plugin.getUsagePlan.restore();
+    sandbox.stub(plugin, 'getUsagePlan').returns(Promise.resolve(
+      {
+        id: 'some-plan-id',
+        apiStages: []
+      }
+    ));
+    plugin.getApiKey.restore();
+    sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve(
+      {
+        id: 'some-api-id'
+      }
+    ));
+    plugin.removeApiKey(serverless)
+      .then(() => {
+        sandbox.assert.calledOnce(plugin.getUsagePlan);
+        sandbox.assert.calledWith(plugin.getUsagePlan, 'provider-usage-plan');
+        sandbox.assert.calledOnce(plugin.deleteUsagePlan);
+        sandbox.assert.calledWith(plugin.deleteUsagePlan, 'some-plan-id');
+        sandbox.assert.calledOnce(plugin.getApiKey);
+        sandbox.assert.calledWith(plugin.getApiKey, 'some-dev-api-key');
+        sandbox.assert.calledOnce(plugin.deleteApiKey);
+        sandbox.assert.calledWith(plugin.deleteApiKey, 'some-api-id');
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      });
+  });
+
+  it ('should exit of api key not found', done => {
+    serverless.service.provider.usagePlan = undefined;
+    serverless.service.custom.apiKeys = {
+      dev: [
+        {
+          name: 'some-dev-api-key',
+          usagePlan: {
+            name: 'key-usage-plan'
+          }
+        }
+      ]
+    }
+    plugin.getUsagePlan.restore();
+    sandbox.stub(plugin, 'getUsagePlan').returns(Promise.resolve(
+      {
+        id: 'some-plan-id',
+        apiStages: []
+      }
+    ));
+    plugin.getApiKey.restore();
+    sandbox.stub(plugin, 'getApiKey').returns(Promise.resolve());
+    plugin.removeApiKey(serverless)
+      .then(() => {
+        sandbox.assert.calledOnce(plugin.getUsagePlan);
+        sandbox.assert.calledWith(plugin.getUsagePlan, 'key-usage-plan');
+        sandbox.assert.calledOnce(plugin.deleteUsagePlan);
+        sandbox.assert.calledWith(plugin.deleteUsagePlan, 'some-plan-id');
+        sandbox.assert.calledOnce(plugin.getApiKey);
+        sandbox.assert.calledWith(plugin.getApiKey, 'some-dev-api-key');
+        sandbox.assert.notCalled(plugin.deleteApiKey);
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      });
+  });
+
+});
+
+describe('test deleteUsagePlan function', () => {
+  describe('failure', () => {
+    let agMock;
+    before(() => {
+      agMock = new AWS.APIGateway();
+      const agMockPromise = {
+        promise: sinon.fake.rejects(new Error('failed'))
+      };
+      agMock = {
+        deleteUsagePlan: () => { return agMockPromise }
+      };
+    });
+    it ('should throw error', done => {
+      plugin.deleteUsagePlan('test-plugins-us-west-2-key', agMock, serverless.cli)
+      .then(resp => {
+        console.log(resp);
+        done('should not come here');
+      })
+      .catch(err => {
+        err.message.should.eql('failed');
+        done();
+      })
+    });
+  });
+
+  describe('success', () => {
+    let agMock;
+    before(() => {
+      agMock = new AWS.APIGateway();
+      const agMockPromise = {
+        promise: sinon.fake.resolves()
+      };
+      agMock = {
+        deleteUsagePlan: () => { return agMockPromise }
+      };
+    });
+    it ('should return id and value', done => {
+      plugin.deleteUsagePlan('test-plugins-us-west-2-key', agMock, serverless.cli)
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      })
+    });
+  });
+});
+
+describe('test deleteApiKey function', () => {
+  describe('failure', () => {
+    let agMock;
+    before(() => {
+      agMock = new AWS.APIGateway();
+      const agMockPromise = {
+        promise: sinon.fake.rejects(new Error('failed'))
+      };
+      agMock = {
+        deleteApiKey: () => { return agMockPromise }
+      };
+    });
+    it ('should throw error', done => {
+      plugin.deleteApiKey('test-plugins-us-west-2-key', agMock, serverless.cli)
+      .then(resp => {
+        console.log(resp);
+        done('should not come here');
+      })
+      .catch(err => {
+        err.message.should.eql('failed');
+        done();
+      })
+    });
+  });
+
+  describe('success', () => {
+    let agMock;
+    before(() => {
+      agMock = new AWS.APIGateway();
+      const agMockPromise = {
+        promise: sinon.fake.resolves()
+      };
+      agMock = {
+        deleteApiKey: () => { return agMockPromise }
+      };
+    });
+    it ('should return id and value', done => {
+      plugin.deleteApiKey('test-plugins-us-west-2-key', agMock, serverless.cli)
+      .then(() => {
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      })
+    });
+  });
 });

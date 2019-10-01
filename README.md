@@ -138,3 +138,4 @@ For more info on how to get started with Serverless Framework click [here](https
   - Added Remove hook
   - Added option to read the usage plan name from the provider section.
 * 4.0.1 - Updated unit tests and added pre-commit and pre-push hooks using husky
+* 4.0.2 - Fixed usagePlan config selection criterion 

@@ -309,7 +309,7 @@ const addApiKey = async (serverless, options) => {
       planName = `${apiKeyName}-usage-plan`
     }
     // when creating a plan, use the one defined if set, otherwise the default or blank
-    const usagePlanTemplate = (apiKey.usagePlan && (apiKey.usagePlan.quota || apiKey.throttle)) ? apiKey.usagePlan : defaultUsagePlan;
+    const usagePlanTemplate = (apiKey.usagePlan && (apiKey.usagePlan.quota || apiKey.usagePlan.throttle)) ? apiKey.usagePlan : defaultUsagePlan;
 
     if (apiKey.value) {
       apiKeyValue = apiKey.value;

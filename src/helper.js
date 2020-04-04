@@ -394,13 +394,18 @@ const removeApiKey = async (serverless) => {
 
   for (let apiKey of apiKeys) {
     const apiKeyName = apiKey.name;
-
+    const canBeDeleted = apiKey.deleteAtRemoval
     if (apiKey.usagePlan && apiKey.usagePlan.name) {
       planName = apiKey.usagePlan.name;
     } else if (defaultUsagePlan.name) {
       planName = defaultUsagePlan.name;
     } else {
       planName = `${apiKeyName}-usage-plan`
+    }
+
+    if (canBeDeleted == 'false') {
+      serverless.cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Api Key ${apiKeyName} is protected from deletion`)}`);
+      return;
     }
 
     const plan = await module.exports.getUsagePlan(planName, ag, serverless.cli);

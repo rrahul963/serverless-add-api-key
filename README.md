@@ -126,6 +126,19 @@ custom:
 Run severless remove command to remove the created api key and usage plan.
 If the Usage plan is associated with more than one api then the plan and key will be deleted only when the last service is removed.
 
+If you dont want to delete a key as part of `sls remove` command then you can set `deleteAtRemoval` as `false` (default is `true` if not set)
+
+```yaml
+custom:
+  apiKeys:
+    - name: name1
+      deleteAtRemoval: false
+    - name: name2
+```
+
+based on above configuration, key `name1` will not be deleted when running `sls remove` but key `name2` will be removed.
+
+
 For more info on how to get started with Serverless Framework click [here](https://serverless.com/framework/docs/getting-started/).
 
 
@@ -133,9 +146,9 @@ For more info on how to get started with Serverless Framework click [here](https
 
 * 3.3.0 - Added UsagePlan settings
 * 3.3.1 - Added unit tests, examples and travis-ci
-
 * 4.0.0
   - Added Remove hook
   - Added option to read the usage plan name from the provider section.
 * 4.0.1 - Updated unit tests and added pre-commit and pre-push hooks using husky
 * 4.0.2 - Fixed usagePlan config selection criterion 
+* 4.1.0 - Added an option to not delete apiKey with sls remove

@@ -1,6 +1,6 @@
 {
   "name": "serverless-add-api-key",
-  "version": "5.0.1",
+  "version": "4.1.1",
   "description": "serverless plugin to create a api key and usage pattern (if they don't already exist) and associates them to the Rest Api",
   "main": "src/index.js",
   "scripts": {

@@ -954,6 +954,29 @@ describe('test removeApiKey function', () => {
 
   });
 
+  it ('should not delete apikey if deleteAtRemoval is set to boolean false', done => {
+    serverless.service.custom.apiKeys = [
+      {
+        name: 'test-api-key',
+        deleteAtRemoval: false
+      }
+    ];
+
+    plugin.removeApiKey(serverless)
+      .then(() => {
+        sandbox.assert.notCalled(plugin.getUsagePlan);
+        sandbox.assert.notCalled(plugin.deleteUsagePlan);
+        sandbox.assert.notCalled(plugin.getApiKey);
+        sandbox.assert.notCalled(plugin.deleteApiKey);
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        done(err);
+      });
+
+  });
+
   it ('should delete api if usage plan not found', done => {
     serverless.service.custom.apiKeys = [
       {

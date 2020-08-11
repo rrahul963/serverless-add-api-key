@@ -403,7 +403,7 @@ const removeApiKey = async (serverless) => {
       planName = `${apiKeyName}-usage-plan`
     }
 
-    if (canBeDeleted == 'false') {
+    if (canBeDeleted == 'false' || canBeDeleted == false) {
       serverless.cli.consoleLog(`RemoveApiKey: ${chalk.yellow(`Api Key ${apiKeyName} is protected from deletion`)}`);
       return;
     }

@@ -152,3 +152,5 @@ For more info on how to get started with Serverless Framework click [here](https
 * 4.0.1 - Updated unit tests and added pre-commit and pre-push hooks using husky
 * 4.0.2 - Fixed usagePlan config selection criterion 
 * 4.1.0 - Added an option to not delete apiKey with sls remove
+* 4.1.1 - Fixed the issue with deleteAtRemoval not working consistently
+* 4.2.0 - Added support for httpOptions when creating AWS service objects

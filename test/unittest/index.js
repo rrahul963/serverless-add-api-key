@@ -5,6 +5,11 @@ const AWS = require('aws-sdk');
 const plugin = require('../../src/helper');
 
 const provider = {
+  sdk: {
+    config: {
+      httpOptions: ''
+    }
+  },
   getCredentials: () => {
     return {
       credentials: ''

@@ -282,12 +282,14 @@ const addApiKey = async (serverless, options) => {
   const results = [];
   const ag = new AWS.APIGateway({
     credentials: awsCredentials.credentials,
-    region
+    region,
+    httpOptions: provider.sdk.config.httpOptions
   });
 
   const cfn = new AWS.CloudFormation({
     credentials: awsCredentials.credentials,
-    region
+    region,
+    httpOptions: provider.sdk.config.httpOptions
   });
 
   if (!apiKeys || !apiKeys.length) {
@@ -386,7 +388,8 @@ const removeApiKey = async (serverless) => {
   const apiKeys = Array.isArray(apiKeysForStages) ? apiKeysForStages : apiKeysForStages[stage];
   const ag = new AWS.APIGateway({
     credentials: awsCredentials.credentials,
-    region
+    region,
+    httpOptions: provider.sdk.config.httpOptions
   });
 
   let planName;

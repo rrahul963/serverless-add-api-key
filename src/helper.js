@@ -294,7 +294,6 @@ const addApiKey = async (serverless, options) => {
 
   if (!apiKeys || !apiKeys.length) {
     serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`No ApiKey names specified for stage ${stage} so skipping creation`)}`);
-    return;
   }
 
   let planName;

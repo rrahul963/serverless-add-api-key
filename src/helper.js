@@ -265,6 +265,12 @@ const deleteApiKey = async function deleteApiKey(id, ag, cli) {
   }
 };
 
+const resolveDefaultUsagePlan = provider => {
+  if (!provider) return {};
+  if (provider.apiGateway && provider.apiGateway.usagePlan) return provider.apiGateway.usagePlan;
+  return provider.usagePlan || {};
+}
+
 /**
  * Main function that adds api key.
  * @param {Object} serverless Serverless object
@@ -297,7 +303,7 @@ const addApiKey = async (serverless, options) => {
   }
 
   let planName;
-  const defaultUsagePlan = (serverless.service.provider && serverless.service.provider.usagePlan) || {};
+  const defaultUsagePlan = resolveDefaultUsagePlan(serverless.service.provider);
 
   for (let apiKey of apiKeys) {
     let apiKeyValue = null;
@@ -393,7 +399,7 @@ const removeApiKey = async (serverless) => {
   });
 
   let planName;
-  const defaultUsagePlan = (serverless.service.provider && serverless.service.provider.usagePlan) || {};
+  const defaultUsagePlan = resolveDefaultUsagePlan(serverless.service.provider);
 
   for (let apiKey of apiKeys) {
     const apiKeyName = apiKey.name;

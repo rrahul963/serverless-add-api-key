@@ -282,7 +282,8 @@ const addApiKey = async (serverless, options) => {
   const stage = provider.getStage();
   const conceal = options.conceal;
   const apiKeysForStages = serverless.service.custom.apiKeys || [];
-  const apiKeys = Array.isArray(apiKeysForStages) ? apiKeysForStages : apiKeysForStages[stage] || [];
+  const apiKeysForStage  = apiKeysForStages[stage] || [];
+  const apiKeys = Array.isArray(apiKeysForStages) ? apiKeysForStages : apiKeysForStage;  
   const serviceName = serverless.service.getServiceName();
   const stackName = serverless.service.provider.stackName || `${serviceName}-${stage}`;
   const results = [];

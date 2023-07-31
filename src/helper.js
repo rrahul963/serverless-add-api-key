@@ -283,7 +283,7 @@ const addApiKey = async (serverless, options) => {
   const conceal = options.conceal;
   const apiKeysForStages = serverless.service.custom.apiKeys || [];
   const apiKeysForStage  = apiKeysForStages[stage] || [];
-  const apiKeys = Array.isArray(apiKeysForStages) ? apiKeysForStages : apiKeysForStage;  
+  const apiKeys = Array.isArray(apiKeysForStages) ? apiKeysForStages : apiKeysForStage;
   const serviceName = serverless.service.getServiceName();
   const stackName = serverless.service.provider.stackName || `${serviceName}-${stage}`;
   const results = [];
@@ -301,6 +301,7 @@ const addApiKey = async (serverless, options) => {
 
   if (!apiKeys || !apiKeys.length) {
     serverless.cli.consoleLog(`AddApiKey: ${chalk.yellow(`No ApiKey names specified for stage ${stage} so skipping creation`)}`);
+    return;
   }
 
   let planName;
